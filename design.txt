@@ -1,0 +1,9 @@
+main=#7A2F71
+highlight=#efd9ce
+accent=#a675a1
+background=#25283d
+f_color=#FFFFFF
+left_frame=#502c57
+titlesize=*12
+subtitlesize=*15
+normalsize=*12
