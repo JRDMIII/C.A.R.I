@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import csv
+
 # This module is what plays the voice assistants voice back to the user
 import pyttsx3
 
@@ -8,6 +10,10 @@ import datetime
 
 # This module is required for the microphone and speech recognition
 import speech_recognition as sr
+
+from googlesearch import search
+
+import webbrowser
 
 # This will return the current date
 def return_date():
@@ -38,6 +44,39 @@ def return_day():
 
     assistantVoice(day)
 
+def return_time():
+    time = str(datetime.datetime.now())
+    hour = time[11:13]
+    min = time[14:16]
+
+    dateLine = ""
+    with open("settings.csv", "r") as readFile:
+        reader = csv.reader(readFile)
+        for row in reader:
+            if "date_format" in str(row):
+                dateLine = str(row[0])
+            else:
+                pass
+
+        format = dateLine[12:]
+        isAfternoon = False
+        if format == "12":
+            hour = int(hour)
+            if hour > 12:
+                isAfternoon = True
+                hour = hour - 12
+                hour = str(hour)
+
+    if format=="12":
+        if isAfternoon:
+            assistantVoice("It is " + hour + " " + min + "pm")
+        elif not isAfternoon:
+            assistantVoice("It is " + hour + " " + min + "am")
+
+def set_hour_format(format):
+    with open("settings.csv", "w") as writeFile:
+        writer = csv.writer(writeFile)
+        writer.writerow([("date_format=" + format)])
 
 # This subroutine will produce the audio file which the voice assistant will play back
 num = 1
@@ -61,8 +100,8 @@ def getAudio():
     with m as source:
 
         # This begins recording audio coming from our mic source
-        rec.pause_threshold = 1.2
-        audio = rec.listen(source, phrase_time_limit=7)
+        rec.pause_threshold = 2
+        audio = rec.listen(source)
         print("Stopped Listening")
 
         try:
@@ -79,9 +118,29 @@ def process_query():
     # This makes sure that queries will be constantly processed
     while True:
         query = getAudio().lower()
-        if " date" in query:
+        if "what is the date" in query:
             return_date()
-        if " day" in query:
+        elif "what is the day" in query:
             return_day()
+        elif " time" in query:
+            if "set " in query:
+                if "24" in query:
+                    assistantVoice("Setting time to 24-hour format")
+                    set_hour_format("24")
+                if "12" in query:
+                    assistantVoice("Setting time to 12-hour format")
+                    set_hour_format("12")
+
+            else:
+                return_time()
+        elif "search " in query:
+            start = query.find("search ")
+            query = query[start + 7:]
+            print(query)
+            assistantVoice("Looking for " + query)
+            webbrowser.open(query)
+        if "thank you" in query or "thanks" in query:
+            assistantVoice("You're welcome")
+
 
 process_query()
