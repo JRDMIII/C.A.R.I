@@ -1,50 +1,42 @@
-# STT/TTS algorithm
+#!/usr/bin/env python3
 
-# These are the modules that will be installed into python
-
-# This recognises and translates the incoming voice
+import time
 import speech_recognition as sr
+from gtts import gTTS
+import os
+import playsound as plays
 
+# This module is required for the microphone
 import pyaudio
 
-# This is the module we will use to speak the text recieved
-import pyttsx3
+# This subroutine will produce the audio file which the voice assistant will play back
+num = 1
+def assistantVoice(output):
+    global num
 
-# Instantiating an obj of the recogniser class
+    num += 1
+    print("Person : ", output)
+
+    toBeSaid = gTTS(text=output, lang='en', slow=False)
+    # This is where we save the audio file given by gtts
+    file = str(num)+".mp3"
+    toBeSaid.save("welcome.mp3")
+
+    # This uses the playsound module to play the audio file
+    os.system("mpg321 welcome.mp3")
+    os.remove(file)
+
 rec = sr.Recognizer()
-
-def speaktext(command):
-
-    # Initialise the engine
-    engine = pyttsx3.init()
-    engine.say(command)
-    engine.runAndWait()
-
-# This is an infinite loop which will constantly look for the user speaking
+m = sr.Microphone()
 while True:
+    with m as source:
 
-    # to handle exceptions when the program begins
-    # to un a try except loop is used here
-    try:
-        # Use the microphone selected as the source of input
-        with sr.Microphone() as source2:
-            # Adjusting the recogniser to ambient noise
-            # The longer the duration the more noises it will
-            #  be able to block out
-            rec.adjust_for_ambient_noise(source2, duration=0.2)
+        audio = rec.listen(source)
 
-            # Listens for user input
-            audio2 = rec.listen(source2)
-
-            # Using google to recognise audio
-            MyText = rec.recognize_google(audio2)
-            MyText = MyText.lower()
-
-            print("Did you say" + MyText)
-            speaktext(MyText)
-
-    except sr.RequestError as e:
-        print("Could not request results; {0}".format(e))
-
-    except sr.UnknownValueError:
-        print("Unkown Error Occured")
+        try:
+            text = rec.recognize_google(audio)
+            assistantVoice(text)
+        except sr.UnknownValueError:
+            print("Google Speech Recognition could not understand audio")
+        except sr.RequestError as e:
+            print("Could not get results from GSR service; {0}".format(e))
