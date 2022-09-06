@@ -1,28 +1,43 @@
 #!/usr/bin/env python3
 
-import time
-import speech_recognition as sr
-from gtts import gTTS
-import os
-import playsound as plays
+# This module is what plays the voice assistants voice back to the user
 import pyttsx3
 
-# This module is required for the microphone
-import pyaudio
+# This module will be used to get the current date
+import datetime
 
-def commandCheck(audioInput):
-    # This list of if statements looks for keywords within the audio being received to decide the correct output
-    if "hello" in audioInput:
-        assistantVoice("i think you want me to play something?")
+# This module is required for the microphone and speech recognition
+import speech_recognition as sr
 
-    if "play" in audioInput:
-        assistantVoice("i think you want me to play something?")
+# This will return the current date
+def return_date():
+    date = datetime.date.today()
+    today = datetime.datetime.today().weekday() + 1
 
-    if "code" in audioInput:
-        assistantVoice("i think you want me to code something?")
+    days = {1: 'Monday', 2: 'Tuesday',
+                3: 'Wednesday', 4: 'Thursday',
+                5: 'Friday', 6: 'Saturday',
+                7: 'Sunday'}
 
-    if "homework" in audioInput:
-        assistantVoice("Do you want me to show you your homework?")
+    if today in days.keys():
+        day = str(days[today])
+
+    d1 = date.strftime("%B %d, %Y")
+    assistantVoice(day + " " + d1)
+
+def return_day():
+    today = datetime.datetime.today().weekday() + 1
+
+    days = {1: 'Monday', 2: 'Tuesday',
+                3: 'Wednesday', 4: 'Thursday',
+                5: 'Friday', 6: 'Saturday',
+                7: 'Sunday'}
+
+    if today in days.keys():
+        day = str(days[today])
+
+    assistantVoice(day)
+
 
 # This subroutine will produce the audio file which the voice assistant will play back
 num = 1
@@ -46,16 +61,27 @@ def getAudio():
     with m as source:
 
         # This begins recording audio coming from our mic source
-        print("Speak...")
+        rec.pause_threshold = 1.2
         audio = rec.listen(source, phrase_time_limit=7)
-        print("Stop.")
+        print("Stopped Listening")
 
         try:
             text = rec.recognize_google(audio, language='en-US')
             print("You : ", text)
-            return text
         except:
             print("Google Speech Recognition could not understand audio")
+            return "None"
 
-while True:
-    getAudio()
+    return text
+
+def process_query():
+
+    # This makes sure that queries will be constantly processed
+    while True:
+        query = getAudio().lower()
+        if " date" in query:
+            return_date()
+        if " day" in query:
+            return_day()
+
+process_query()
