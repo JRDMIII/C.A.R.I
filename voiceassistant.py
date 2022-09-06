@@ -5,6 +5,7 @@ import speech_recognition as sr
 from gtts import gTTS
 import os
 import playsound as plays
+import pyttsx3
 
 # This module is required for the microphone
 import pyaudio
@@ -17,26 +18,33 @@ def assistantVoice(output):
     num += 1
     print("Person : ", output)
 
-    toBeSaid = gTTS(text=output, lang='en', slow=False)
-    # This is where we save the audio file given by gtts
-    file = str(num)+".mp3"
-    toBeSaid.save("welcome.mp3")
+    engine = pyttsx3.init()
+    engine.say(output)
+    engine.runAndWait()
 
-    # This uses the playsound module to play the audio file
-    os.system("mpg321 welcome.mp3")
-    os.remove(file)
-
+# This instantiates an object for recognising voices
 rec = sr.Recognizer()
 m = sr.Microphone()
-while True:
+
+def getAudio():
     with m as source:
 
         audio = rec.listen(source)
 
         try:
             text = rec.recognize_google(audio)
-            assistantVoice(text)
+            print(text)
         except sr.UnknownValueError:
             print("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:
             print("Could not get results from GSR service; {0}".format(e))
+
+        # This list of if statements looks for keywords within the audio being received to decide the correct output
+        if "play" in text:
+            assistantVoice("i think you want me to play something?")
+
+        if "code" in text:
+            assistantVoice("i think you want me to code something?")
+
+        if "homework" in text:
+            assistantVoice("Do you want me to show you your homework?")
