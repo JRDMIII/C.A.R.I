@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 
 import csv
 
@@ -17,6 +18,47 @@ import googlesearch
 import webbrowser
 
 import requests
+
+def return_tasks():
+    import requests
+
+    token = '<token_for_api>'
+
+    database_id = '<database_id>'
+
+    payload = {
+        "filter": {"property": "Progress",
+                   "multi_select": {
+                       "contains": "In Progress"
+                   }},
+        "page_size": 100
+    }
+    headers = {
+        "Authorization": "Bearer " + token,
+        "Accept": "application/json",
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json"
+    }
+
+    # This is the URL that will be used to get information on the database
+    readURL = f"https://api.notion.com/v1/databases/{database_id}/query"
+
+    # Notion API requires you to pass in the value get in order to retrieve information from a database
+    res = requests.post(readURL, json=payload, headers=headers)
+    # This is used to remove characters that are giving us errors and mistakes in outputs
+    temp = res.text.replace("]", "")
+    # This is used to split the long string into a list which can be searched through
+    response = temp.split(",")
+    assistantVoice("Your tasks are: ")
+    time.sleep(0.3)
+    for line in response:
+        # This looks through each element of the list created to find the URLs then leaves just the name of the tasks
+        if "url" in line:
+            # This removes the extra part of the tasks from it so it will just show the name of the tasks
+            assistantVoice(line[29:-35])
+            time.sleep(0.3)
+
+    return None
 
 def get_name():
     with open("settings.csv", "r") as readFile:
@@ -235,7 +277,9 @@ def process_query():
     # This makes sure that queries will be constantly processed
     while True:
         query = getAudio().lower()
-        if "assistant" in query:
+        if query == "None":
+            break
+        elif "assistant" in query:
             if "what is the date" in query:
                 return_date()
             elif "what is the day" in query:
@@ -258,6 +302,10 @@ def process_query():
             elif "get" in query or "prepare" in query:
                 if "morning" in query or "day" in query:
                     return_morn_prep()
+            elif "tell" in query or "give" in query:
+                if "tasks" in query:
+                    return_tasks()
 
-
-process_query()
+if __name__ == "__main__":
+    while True:
+        process_query()
