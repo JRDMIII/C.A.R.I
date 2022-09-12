@@ -3,7 +3,8 @@ import tkinter
 
 import customtkinter as ct
 import ui_creation as tui
-import tkinter as t
+import scripts
+from ui_creation import btn
 
 # This module will allow us to read and write to the settings file
 import csv
@@ -82,8 +83,7 @@ class Application(ct.CTk):
         self.frame_right.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
         self.frame_right.rowconfigure(7, weight=10)
-        self.frame_right.columnconfigure((0, 1), weight=1)
-        self.frame_right.columnconfigure(2, weight=0)
+        self.frame_right.columnconfigure(0, weight=1)
 
         self.frame_info = ct.CTkFrame(master=self.frame_right)
         self.frame_info.grid(row=0, column=0, columnspan=2, rowspan=4, pady=20, padx=20, sticky="nsew")
@@ -91,7 +91,8 @@ class Application(ct.CTk):
         # == This is where the left frame will be configured == #
         self.left_title = ct.CTkLabel(master=self.frame_left,
                                       text="C.A.R.I. Control Centre",
-                                      text_font=(self.font_bold, self.title_size))
+                                      text_font=(self.font_bold, self.title_size),
+                              text_color=self.font_color)
         self.left_title.grid(row=1, column=0, padx=10, pady=10)
 
         # This creates the 3 buttons and the
@@ -124,33 +125,110 @@ class Application(ct.CTk):
         # This creates the title for the software
         self.home_title = ct.CTkLabel(master=self.frame_right,
                                       text="Home",
-                                      text_font=(self.font_bold, self.title_size))
+                                      text_font=(self.font_bold, self.title_size),
+                              text_color=self.font_color)
         self.home_title.grid(row=0, column=0, padx=5, pady=10)
         self.home_title.configure()
 
         # This creates the title for the software
-        self.p1 = ct.CTkLabel(master=self.frame_right,
-                                      text="Welcome to the C.A.R.I Control Centre",
-                                      text_font=(self.font, self.normal_size))
-        self.p1.grid(row=1, column=0, padx=5, pady=10)
+        self.s1 = ct.CTkLabel(master=self.frame_right,
+                              text=scripts.subtitle_p1,
+                              text_font=(self.font, self.subtitle_size),
+                              text_color=self.font_color)
+        self.s1.grid(row=1, column=0, padx=5, pady=1)
 
+        # This creates the title for the software
+        self.p1 = ct.CTkLabel(master=self.frame_right,
+                                      text=scripts.home_page_p1,
+                                      text_font=(self.font, self.normal_size),
+                              text_color=self.font_color)
+        self.p1.grid(row=2, column=0, padx=5, pady=1)
 
     def settings_page(self):
         # This for loop allows for us to completely change the page which we are looking at
         for i in self.frame_right.winfo_children():
             i.destroy()
 
+        # These are the variables for all the settings that can be changed
+        self.radio_var = tkinter.IntVar(value=0)
+
         self.settings_title = ct.CTkLabel(master=self.frame_right,
                                       text="Settings",
-                                      text_font=(self.font_bold, self.title_size))
-        self.settings_title.grid(row=0, column=0, padx=5, pady=20)
+                                      text_font=(self.font_bold, self.title_size),
+                              text_color=self.font_color)
+        self.settings_title.grid(row=0, column=0, columnspan=2, padx=5, pady=10)
+
+        # === These will be all the different settings === #
+
+        timeSetting = ""
+        with open("settings.csv", "r") as readFile:
+            reader = csv.reader(readFile)
+            for row in reader:
+                if "date_format" in str(row):
+                    timeSetting = str(row[0])
+                else:
+                    pass
+
+        self.format = (timeSetting[12:]) + "-Hour Format"
+
+        self.format_slider = ct.CTkSwitch(master=self.frame_right,
+                                          text=self.format,
+                                          command=self.sel_format_event,
+                                          text_font=self.font,
+                                          text_color=self.font_color,
+                                          onvalue="24",
+                                          offvalue="12")
+        self.format_slider.grid(row=2, column=0, padx=10, pady=20)
+
+        # This button will be used to save all the settins chosen to the settings file
+        self.save_btn =  btn(self.frame_right,
+                                    self.save,
+                                    self.accent,
+                                    "Save Settings", 20, 0, 10, 10,
+                                    self.font_color)
+
+    def sel_format_event(self):
+        current = self.format_slider.get()
+        if current == "12":
+            self.format_slider.configure(text="12-Hour Format")
+        elif current == "24":
+            self.format_slider.configure(text="24-Hour Format")
 
     # === This is where the button functions will be defined === #
 
+    # This will define what happens when the save button is pressed in the exit menu
+    def save(self):
+        time_format = self.format_slider.get()
+        print(time_format)
+
+        settings = []
+        with open("settings.csv", "r") as readFile:
+            reader = csv.reader(readFile)
+            for row in reader:
+                try:
+                    settings.append(row[0])
+                except:
+                    pass
+
+        print(settings)
+
+        for setting in settings:
+            if "date_format" in setting:
+                settings.remove(setting)
+                print(settings)
+            else:
+                pass
+
+        settings.append(("date_format=" + time_format))
+        print(settings)
+
+        with open("settings.csv", "w", newline="") as writeFile:
+            writer = csv.writer(writeFile)
+            print(settings)
+            writer.writerow(settings)
     # This will define what happens when the exit button is pressed
     def close(self, event=0):
         self.destroy()
-
 
 if __name__ == "__main__":
 
