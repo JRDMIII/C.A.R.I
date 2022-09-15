@@ -13,18 +13,16 @@ import datetime
 import speech_recognition as sr
 
 # This will be the module that will be used to search for
-import googlesearch
+# import googlesearch
 
 import webbrowser
 
 import requests
 
 def return_tasks():
-    import requests
+    token = 'secret_L8AKRecNOCHoc0cC1hRehIek3F58MSMaO8z4JcRHi2v'
 
-    token = '<token_for_api>'
-
-    database_id = '<database_id>'
+    database_id = 'fca0e258b64e46b6a56330bc04a73857'
 
     payload = {
         "filter": {"property": "Progress",
@@ -151,7 +149,6 @@ def return_day():
     assistantVoice("It is " + day + " today")
 
 def return_time():
-    print("processing request")
     time = str(datetime.datetime.now())
     hour = time[11:13]
     mins = time[14:16]
@@ -182,11 +179,11 @@ def return_time():
     # settings and bases the output on those settings
     if format == "12":
         if isAfternoon:
-            assistantVoice("It is " + str(hour) + " " + mins + "pm")
+            assistantVoice("The time is " + str(hour) + " " + mins + "pm")
         elif not isAfternoon:
-            assistantVoice("It is " + str(hour) + " " + mins + "am")
+            assistantVoice("The time is " + str(hour) + " " + mins + "am")
     if format == "24":
-        assistantVoice("It is " + str(hour) + " " + mins)
+        assistantVoice("The time is " + str(hour) + " " + mins)
 
 def return_search(query):
     start = query.find("search ")
@@ -244,9 +241,12 @@ def return_morn_prep():
         day = str(days[today])
     d1 = date.strftime("%B %d, %Y")
     assistantVoice("Today is " + day + " " + d1)
+    return_time()
     return_weather()
+    return_tasks()
 
-# This subroutine will produce the audio file which the voice assistant will play back
+# This subroutine will produce the audio file which the voice assist
+# ant will play back
 def assistantVoice(output):
     print("Person : ", output)
 
@@ -308,4 +308,4 @@ def process_query():
 
 if __name__ == "__main__":
     while True:
-        process_query()
+        return_morn_prep()
