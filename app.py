@@ -1,7 +1,10 @@
 # This is the module that will be used to create the UI
+import sqlite3
 import tkinter
 
 import customtkinter as ct
+
+import database as db
 import ui_creation as tui
 import scripts
 from ui_creation import btn
@@ -132,14 +135,14 @@ class Application(ct.CTk):
 
         # This creates the title for the software
         self.s1 = ct.CTkLabel(master=self.frame_right,
-                              text=scripts.subtitle_p1,
+                              text="scripts.subtitle_p1",
                               text_font=(self.font, self.subtitle_size),
                               text_color=self.font_color)
         self.s1.grid(row=1, column=0, padx=5, pady=1)
 
         # This creates the title for the software
         self.p1 = ct.CTkLabel(master=self.frame_right,
-                                      text=scripts.home_page_p1,
+                                      text="scripts.home_page_p1",
                                       text_font=(self.font, self.normal_size),
                               text_color=self.font_color)
         self.p1.grid(row=2, column=0, padx=5, pady=1)
@@ -160,77 +163,76 @@ class Application(ct.CTk):
 
         # === These will be all the different settings === #
 
-        timeSetting = ""
-        with open("settings.csv", "r") as readFile:
-            reader = csv.reader(readFile)
-            for row in reader:
-                if "date_format" in str(row):
-                    timeSetting = str(row[0])
-                else:
-                    pass
+        time_format = str(database.get_date_format())[1:3]
 
-        self.format = (timeSetting[12:]) + "-Hour Format"
+        self.format = (time_format) + "-Hour Format"
 
-        self.format_slider = ct.CTkSwitch(master=self.frame_right,
+
+        self.format_switch = ct.CTkSwitch(master=self.frame_right,
                                           text=self.format,
                                           command=self.sel_format_event,
                                           text_font=self.font,
                                           text_color=self.font_color,
                                           onvalue="24",
                                           offvalue="12")
-        self.format_slider.grid(row=2, column=0, padx=10, pady=20)
+        self.format_switch.grid(row=2, column=0, padx=10, pady=20)
 
-        # This button will be used to save all the settins chosen to the settings file
+        # This means the switch will be on the right setting when the settings page opens it
+        if time_format == "24":
+            self.format_switch.toggle()
+
+        # === This is the name setting === #
+
+        # This creates the title for the software
+        self.name_title = ct.CTkLabel(master=self.frame_right,
+                              text="Name",
+                              text_font=(self.font, self.normal_size),
+                              text_color=self.font_color)
+        self.name_title.grid(row=3, column=0, padx=5, pady=0)
+
+        # This gets the name from the database
+        name = str(database.get_name())[2:-3]
+
+        self.name_entry = ct.CTkEntry(master=self.frame_right,
+                                    placeholder_text=name,
+                                    text_font=self.font,
+                                    text_color=self.font_color,)
+        self.name_entry.grid(row=4, column=0, padx=10, pady=5)
+
+
+
+        # This button will be used to save all the settings chosen to the database
         self.save_btn =  btn(self.frame_right,
-                                    self.save,
+                                    self.save_format,
                                     self.accent,
                                     "Save Settings", 20, 0, 10, 10,
                                     self.font_color)
 
     def sel_format_event(self):
-        current = self.format_slider.get()
+        current = self.format_switch.get()
         if current == "12":
-            self.format_slider.configure(text="12-Hour Format")
+            self.format_switch.configure(text="12-Hour Format")
         elif current == "24":
-            self.format_slider.configure(text="24-Hour Format")
+            self.format_switch.configure(text="24-Hour Format")
 
     # === This is where the button functions will be defined === #
 
     # This will define what happens when the save button is pressed in the exit menu
-    def save(self):
-        time_format = self.format_slider.get()
-        print(time_format)
+    def save_format(self):
+        time_format = self.format_switch.get()
+        database.set_date_format(time_format)
 
-        settings = []
-        with open("settings.csv", "r") as readFile:
-            reader = csv.reader(readFile)
-            for row in reader:
-                try:
-                    settings.append(row[0])
-                except:
-                    pass
+        name = self.name_entry.get()
+        database.set_name(name)
 
-        print(settings)
+        print(database.get_all())
 
-        for setting in settings:
-            if "date_format" in setting:
-                settings.remove(setting)
-                print(settings)
-            else:
-                pass
 
-        settings.append(("date_format=" + time_format))
-        print(settings)
-
-        with open("settings.csv", "w", newline="") as writeFile:
-            writer = csv.writer(writeFile)
-            print(settings)
-            writer.writerow(settings)
     # This will define what happens when the exit button is pressed
     def close(self, event=0):
         self.destroy()
 
 if __name__ == "__main__":
-
+    database = db.database()
     app = Application()
     app.mainloop()
