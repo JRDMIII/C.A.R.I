@@ -13,11 +13,13 @@ import datetime
 import speech_recognition as sr
 
 # This will be the module that will be used to search for
-# import googlesearch
+import googlesearch
 
 import webbrowser
 
 import requests
+
+import database as db
 
 def return_tasks():
     token = 'secret_L8AKRecNOCHoc0cC1hRehIek3F58MSMaO8z4JcRHi2v'
@@ -58,19 +60,6 @@ def return_tasks():
 
     return None
 
-def get_name():
-    with open("settings.csv", "r") as readFile:
-        reader = csv.reader(readFile)
-        for row in reader:
-            for field in row:
-                if "name=" in field:
-                    start = field.find("=")
-                    start += 1
-                    name = field[start:]
-                else:
-                    pass
-    return name
-
 # This will return the current date
 def return_date():
     # This uses the datetime module to collect information on the current date and weekday
@@ -86,9 +75,11 @@ def return_date():
     # This checks to see which element of the dictionary matches the value of "today"
     if today in days.keys():
         day = str(days[today])
+    else:
+        return 1
 
-    d1 = date.strftime("%B %d, %Y")
-    assistantVoice("Today is " + day + " " + d1)
+    date = date.strftime("%B %d, %Y")
+    assistantVoice("Today is " + day + " " + date)
 
 def return_weather():
     api_key = "fb18561cf37594bac1cc98d893bc4e22"
@@ -150,40 +141,26 @@ def return_day():
 
 def return_time():
     time = str(datetime.datetime.now())
-    hour = time[11:13]
-    mins = time[14:16]
+    hour, mins = time[11:13], time[14:16]
 
-    # This is opening the settings file and extracting the specific setting for the format of the time
-    timeSetting = ""
-    with open("settings.csv", "r") as readFile:
-        reader = csv.reader(readFile)
-        for row in reader:
-            if "date_format" in str(row):
-                timeSetting = str(row[0])
-            else:
-                pass
-
-    format = timeSetting[12:]
+    format = str(database.get_date_format())[1:3]
     # This if statement checks to see whether it is the afternoon or not
     isAfternoon = False
     if format == "12":
         hour = int(hour)
-        print(hour)
         if hour > 12:
             isAfternoon = True
-            hour = hour - 12
-            print(hour)
-            hour = str(hour)
+            hour = str(hour - 12)
 
     # The embedded if statements here check to see what the format is in
     # settings and bases the output on those settings
     if format == "12":
         if isAfternoon:
-            assistantVoice("The time is " + str(hour) + " " + mins + "pm")
+            assistantVoice("It is " + str(hour) + " " + mins + "pm")
         elif not isAfternoon:
-            assistantVoice("The time is " + str(hour) + " " + mins + "am")
+            assistantVoice("It is " + str(hour) + " " + mins + "am")
     if format == "24":
-        assistantVoice("The time is " + str(hour) + " " + mins)
+        assistantVoice("It is " + str(hour) + " " + mins)
 
 def return_search(query):
     start = query.find("search ")
@@ -198,59 +175,18 @@ def return_search(query):
     search = searches[0]
     webbrowser.open(search)
 
-def set_hour_format(format):
-    settings = []
-    with open("settings.csv", "r") as readFile:
-        reader = csv.reader(readFile)
-        for row in reader:
-            try:
-                settings.append(row[0])
-            except:
-                pass
-
-    print(settings)
-
-    for setting in settings:
-        if "date_format" in setting:
-            settings.remove(setting)
-            print(settings)
-        else:
-            pass
-
-    settings.append(("date_format="+format))
-    print(settings)
-
-    with open("settings.csv", "w") as writeFile:
-        writer = csv.writer(writeFile)
-        writer.writerow(settings)
-
 def return_morn_prep():
-    name = get_name()
+    name = str(database.get_name())[2:-3]
     assistantVoice("Good Morning " + str(name) + ", hope you are feeling well!")
 
-    # This uses the datetime module to collect information on the current date and weekday
-    date = datetime.date.today()
-    today = datetime.datetime.today().weekday() + 1
-    # This is a dictionary used to change the numerical value of today to the actual day
-    days = {1: 'Monday', 2: 'Tuesday',
-            3: 'Wednesday', 4: 'Thursday',
-            5: 'Friday', 6: 'Saturday',
-            7: 'Sunday'}
-    # This checks to see which element of the dictionary matches the value of "today"
-    if today in days.keys():
-        day = str(days[today])
-    d1 = date.strftime("%B %d, %Y")
-    assistantVoice("Today is " + day + " " + d1)
-    return_time()
+    return_date()
     return_weather()
     return_tasks()
+    assistantVoice("Hope you have a great day!")
 
-# This subroutine will produce the audio file which the voice assist
-# ant will play back
+# This subroutine will produce the audio file which the voice assistant will play back
 def assistantVoice(output):
     print("Person : ", output)
-
-    engine = pyttsx3.init()
     engine.say(output)
     engine.runAndWait()
 
@@ -288,10 +224,10 @@ def process_query():
                 if "set " in query or "change" in query:
                     if "24" in query:
                         assistantVoice("Setting time to 24-hour format")
-                        set_hour_format("24")
+                        database.set_date_format("24")
                     if "12" in query:
                         assistantVoice("Setting time to 12-hour format")
-                        set_hour_format("12")
+                        database.set_date_format("12")
                 else:
                     print("telling time")
                     return_time()
@@ -307,5 +243,7 @@ def process_query():
                     return_tasks()
 
 if __name__ == "__main__":
+    database = db.database()
+    engine = pyttsx3.init()
     while True:
-        return_morn_prep()
+        process_query()
