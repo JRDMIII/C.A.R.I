@@ -20,6 +20,7 @@ import webbrowser
 import requests
 
 import database as db
+import gestureRecognition as gr
 
 def return_tasks():
     token = 'secret_L8AKRecNOCHoc0cC1hRehIek3F58MSMaO8z4JcRHi2v'
@@ -175,7 +176,8 @@ def return_morn_prep():
 
     # This fetches all the values from the return subroutines and saves them to local variables
     hour, mins, format = return_time()
-    day, date = return_date()
+    day, date = return_day(), return_date()
+
 
     assistantVoice("It is " + hour + " " + mins + format)
     assistantVoice("Today is " + day + " " + date)
@@ -211,7 +213,8 @@ def getAudio():
 def process_query():
     # This makes sure that queries will be constantly processed
     while True:
-        query = getAudio().lower()
+        # query = getAudio().lower()
+        query = "assistant hand gesture"
         if query == "None":
             break
         elif "assistant" in query:
@@ -242,6 +245,18 @@ def process_query():
             elif "tell" in query or "give" in query:
                 if "tasks" in query:
                     return_tasks()
+            elif "hand" in query:
+                if "gesture" in query or "signs" in query:
+                    hand_gesture = -1
+                    while hand_gesture == -1:
+                        hand_gesture, not_found = gr.gestureRec()
+                        if hand_gesture == 1:
+                            return_morn_prep()
+                        elif hand_gesture == 2:
+                            hour, mins, format = return_time()
+                            assistantVoice("It is " + hour + " " + mins + format)
+                        elif hand_gesture == 3:
+                            assistantVoice("It is " + return_day() + " today")
 
 if __name__ == "__main__":
     database = db.database()

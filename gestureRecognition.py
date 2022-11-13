@@ -1,38 +1,50 @@
-from cv2 import cv2
+import cv2
 import time
 import os
 import mediapipe as mp
 
-mp_drawing = mp.solutions.drawing_utils
-mp_hands = mp.solutions.hands
+import handLandmarkDetection
 
-# This sets up our camera to record
-cap = cv2.VideoCapture(0)
-
-prev_time = 0
-
-def find_hands():
-    results = mp_hands.proce
+landmarkDetection = handLandmarkDetection.handLandmarkDetection()
 
 def gestureRec():
+    print("We Checkin hand signs")
+
+    # Sets up video capture
+    cap = cv2.VideoCapture(0)
+
+    # The amount of iterations that will occur for checking which hand gesture is being done
+    iteration_amt = 20
+
+    # The percent is must be above for the hand gesture prediction to be accepted
+    min_certainty = 0.75
 
     # This reads what is currently being shown on the camera e.g. the current frame and
     # Saves it to a variable called "image". The variable return states whether an image
     # Was returned or not
-    ret, image = cap.read()
+    past = []
+    for i in range(0, iteration_amt):
+        ret, image = cap.read()
 
-    # This shows the saved frame on the screen in a window with the title "camera"
-    cv2.imshow("Camera", image)
 
-    new_time = time.time()
-    fps = 1/(new_time-prev_time)
-    prev_time = new_time
+        landmarks, image = landmarkDetection.detect_hand_landmarks(image, draw_default_style=False)
 
-    if cv2.waitKey(1) and 0xff == ord('x'):
-        cap.close()
+        fingers = landmarkDetection.count_up_fingers(landmarks)
+        fingers_up = int(fingers[0].count(1)) + int(fingers[1].count(1))
+        print(str(fingers_up))
+        past.append(fingers_up)
 
-    return -1
+    hand_gesture = past[0]
+    if hand_gesture == 0:
+        return -1, True
+    else:
+        percent_certainty = past.count(hand_gesture)/iteration_amt
+        print(str(percent_certainty))
+        if percent_certainty > min_certainty:
+            print("Decided on a ", hand_gesture)
+            return hand_gesture, False
 
-if __name__ == "__main__":
-    while True:
-        gestureRec()
+    return -1, True
+
+
+
