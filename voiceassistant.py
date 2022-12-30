@@ -13,7 +13,7 @@ import datetime
 import speech_recognition as sr
 
 # This will be the module that will be used to search for
-# import googlesearch
+import googlesearch
 
 import webbrowser
 

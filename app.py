@@ -6,7 +6,6 @@ import customtkinter as ct
 
 import database as db
 import ui_creation as tui
-import scripts
 from ui_creation import btn
 
 # This module will allow us to read and write to the settings file
