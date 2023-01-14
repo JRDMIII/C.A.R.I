@@ -61,6 +61,7 @@ class Application(ct.CTk):
 
         # This sets the title and dimensions of the application as well as what occurs when the app is closed
         self.geometry(f'{Application.WIDTH}x{Application.HEIGHT}')
+        self.resizable(False, False)
         self.title("C.A.R.I")
         self.protocol("WM_DELETE_WINDOW", self.close)
 
@@ -124,7 +125,8 @@ class Application(ct.CTk):
                                                fg_color="gray",
                                                corner_radius=0,
                                                width=self.frame_left_width,
-                                               height=self.button_height)
+                                               height=self.button_height,
+                                               command=self.settings_screen)
         self.settings_button.grid(row=4, column=0)
         # This makes sure that the home page is the first thing that is shown
         self.home_screen()
@@ -287,52 +289,68 @@ class Application(ct.CTk):
             pady=10
         )
 
-    def settings(self):
+    def settings_screen(self):
         for child in self.frame_right.winfo_children():
             child.destroy()
 
-        # These are the variables for all the settings that can be changed
-        self.radio_var = tkinter.IntVar(value=0)
+        self.frame_right.grid_columnconfigure(1, weight=1)
+        self.frame_right.grid_columnconfigure(0, weight=1)
+
+        self.frame_va_settings = ct.CTkFrame(master=self.frame_right, corner_radius=0)
+        self.frame_va_settings.grid(row=1, column=0, sticky="nswe", padx=20, pady=20)
+
+        self.frame_app_settings = ct.CTkFrame(master=self.frame_right, corner_radius=0)
+        self.frame_app_settings.grid(row=1, column=1, sticky="nswe", padx=20, pady=20)
+
         self.settings_title = ct.CTkLabel(master=self.frame_right,
-                                          text="Settings",
-                                          font=self.title_font,
-                                          text_color=self.font_color)
-        self.settings_title.grid(row=0, column=0, columnspan=2, padx=5, pady=10)
-        # === These will be all the different settings === #
-        time_format = self.db.get_date_format()[1:3]
-        self.format = (time_format) + "-Hour Format"
-        self.format_switch = ct.CTkSwitch(master=self.frame_right,
+                                      text="Settings",
+                                      font=self.title_font)
+        self.settings_title.grid(row=0, column=0, columnspan=2, padx=15, pady=10, sticky="w")
+
+        # === These are all the settings which can be changed === #
+        self.voice_assistant_title = ct.CTkLabel(master=self.frame_va_settings,
+                                          text="Voice Assistant Settings",
+                                          font=self.title_font)
+        self.voice_assistant_title.grid(row=1, column=0, columnspan=1, padx=15, pady=10, sticky="w")
+
+        # === These are all the settings which can be changed === #
+        self.app_settings_title = ct.CTkLabel(master=self.frame_app_settings,
+                                                 text="App + Other Settings",
+                                                 font=self.title_font)
+        self.app_settings_title.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
+
+        # Creating the time format setting
+
+        time_format = str(self.db.get_date_format())[1:3]
+        self.format = time_format + "-Hour Format"
+
+        self.format_switch = ct.CTkSwitch(master=self.frame_va_settings,
                                           text=self.format,
                                           command=self.sel_format_event,
-                                          text_font=self.font,
-                                          text_color=self.font_color,
+                                          font=self.normal_font,
                                           onvalue="24",
-                                          offvalue="12")
-        self.format_switch.grid(row=2, column=0, padx=10, pady=20)
-        # This means the switch will be on the right setting when the settings page opens it
+                                          offvalue="12"
+                                          )
+        self.format_switch.grid(row=2, column=0, padx=10, pady=20, sticky="w")
+
         if time_format == "24":
             self.format_switch.toggle()
-        # === This is the name setting === #
-        # This creates the title for the software
-        self.name_title = ct.CTkLabel(master=self.frame_right,
-                                      text="Name",
-                                      text_font=(self.normal_font, self.normal_size),
-                                      text_color=self.font_color)
-        self.name_title.grid(row=3, column=0, padx=5, pady=0)
 
-        # This gets the name from the database
-        # name = str(database.get_name())[2:-3]
-        self.name_entry = ct.CTkEntry(master=self.frame_right,
-                                      placeholder_text="name",
-                                      text_font=self.normal_font,
-                                      text_color=self.font_color, )
-        self.name_entry.grid(row=4, column=0, padx=10, pady=5)
+        # Creating the name setting
+        self.name_title = ct.CTkLabel(master=self.frame_va_settings,
+                                      text="Name",
+                                      font=self.normal_font)
+        self.name_title.grid(row=4, column=0, padx=15, pady=0, sticky="w")
+
+        name = str(self.db.get_name())[2:-3]
+
+        self.name_entry = ct.CTkEntry(master=self.frame_va_settings,
+                                      placeholder_text=name,
+                                      font=self.normal_font)
+        self.name_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
+
         # This button will be used to save all the settings chosen to the database
-        self.save_btn = btn(self.frame_right,
-                            self.save_format,
-                            self.accent,
-                            "Save Settings", 20, 0, 10, 10,
-                            self.font_color)
+        self.save_btn = CTkButton
 
     def history(self):
         for child in self.frame_right.winfo_children():
@@ -396,6 +414,16 @@ class Application(ct.CTk):
             self.format_switch.configure(text="12-Hour Format")
         elif current == "24":
             self.format_switch.configure(text="24-Hour Format")
+
+    # This will define what happens when the save button is pressed in the exit menu
+    def save_format(self):
+        time_format = self.format_switch.get()
+        self.db.set_date_format(time_format)
+
+        name = self.name_entry.get()
+        self.db.set_name(name)
+
+        print(self.db.get_all_settings())
 
 if __name__ == "__main__":
     application = Application()

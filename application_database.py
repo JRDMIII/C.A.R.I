@@ -3,40 +3,22 @@ import sqlite3
 
 class database():
     def __init__(self):
-        try:
+        # This connects our program to the appropriate database
+        # Or creates it if the file hasn't been created
+        self.conn = sqlite3.connect('settings.db')
 
-            # This connects our program to the appropriate database
-            # Or creates it if the file hasn't been created
-            self.conn = sqlite3.connect('profile.db')
-
-            # A cursor is used to edit the database
-            self.c = self.conn.cursor()
-
-            self.c.execute("""CREATE TABLE profile (
-                            email text,
-                            loggedIn integer
-                            );
-                            
-                            "CREATE TABLE settings (
-                            name text,
-                            date_format integer
-                            );
-                """)
-            self.c.execute(f"INSERT INTO profile VALUES ('', '0')")
-            self.c.execute(f"INSERT INTO settings VALUES ('Ange', '12')")
-            self.conn.commit()
-        except sqlite3.OperationalError:
-            print("Database Already Created")
+        # A cursor is used to edit the database
+        self.c = self.conn.cursor()
 
     # === These are the setters and getters for the name element === #
     def get_email(self):
-        self.c.execute("SELECT email FROM profile")
+        self.c.execute("SELECT email FROM tblAccounts")
         result = self.c.fetchone()[0]
         return result
 
     def set_email(self, email):
         self.c.execute(f"""
-        UPDATE profile
+        UPDATE tblAccounts
         SET email='{email}';
     """)
         self.conn.commit()
@@ -63,7 +45,7 @@ class database():
 
     # === These are the setters and getters for the name element === #
     def get_name(self):
-        self.c.execute("SELECT name FROM settings")
+        self.c.execute("SELECT name FROM tblAccounts")
         return self.c.fetchone()
 
     def set_name(self, name):
@@ -92,6 +74,13 @@ class database():
         FROM settings
         """)
         return self.c.fetchall()
+
+    ### These are all the database subroutines which need to be created ###
+
+    def login(self, email, password):
+        return 1
+
+    def register(self, email, password, first_name, last_name):
 
     def end(self):
         self.conn.close()

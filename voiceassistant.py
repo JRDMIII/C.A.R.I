@@ -2,6 +2,7 @@
 import time
 
 import csv
+from PyP100 import PyP110, PyL530
 
 # This module is what plays the voice assistants voice back to the user
 import pyttsx3
@@ -13,7 +14,7 @@ import datetime
 import speech_recognition as sr
 
 # This will be the module that will be used to search for
-import googlesearch
+# import googlesearch
 
 import webbrowser
 
@@ -21,6 +22,7 @@ import requests
 
 import database as db
 import gestureRecognition as gr
+import hardware as hd
 
 def return_tasks():
     token = 'secret_L8AKRecNOCHoc0cC1hRehIek3F58MSMaO8z4JcRHi2v'
@@ -54,7 +56,7 @@ def return_tasks():
         return None
     else:
         assistantVoice("Your tasks are: ")
-        time.sleep(0.3)
+        time.sleep(0.1)
         for line in response:
             # This looks through each element of the list created to find the URLs then leaves just the name of the tasks
             if "url" in line:
@@ -182,8 +184,14 @@ def return_morn_prep():
     assistantVoice("It is " + hour + " " + mins + format)
     assistantVoice("Today is " + day + " " + date)
     return_weather()
+
+    assistantVoice("Device energy usage:")
+    time.sleep(0.1)
+    assistantVoice(hardware.showEnergyUsage())
+
     return_tasks()
     assistantVoice("Hope you have a great day!")
+
 
 # This subroutine will produce the audio file which the voice assistant will play back
 def assistantVoice(output):
@@ -198,11 +206,9 @@ def getAudio():
     m = sr.Microphone()
 
     with m as source:
-
         # This begins recording audio coming from our mic source
         rec.pause_threshold = 1
         audio = rec.listen(source)
-
         try:
             text = rec.recognize_google(audio, language='en-US')
             print("You : ", text)
@@ -214,52 +220,91 @@ def process_query():
     # This makes sure that queries will be constantly processed
     while True:
         # query = getAudio().lower()
-        query = "assistant hand gesture"
+        query = "hey assistant prepare me for the morning"
         if query == "None":
             break
         elif "assistant" in query:
-            if "what is the date" in query:
-                day = return_day()
-                date = return_date()
-                assistantVoice("Today is " + day + " " + date)
-            elif "what is the day" in query:
-                assistantVoice("It is " + return_day() + " today")
-            elif " time" in query:
-                if "set " in query or "change" in query:
-                    if "24" in query:
-                        assistantVoice("Setting time to 24-hour format")
-                        database.set_date_format("24")
-                    if "12" in query:
-                        assistantVoice("Setting time to 12-hour format")
-                        database.set_date_format("12")
-                else:
-                    hour, mins, format = return_time()
-                    assistantVoice("It is " + hour + " " + mins + format)
-            elif "search " in query:
-                return_search(query)
-            elif "thank you" in query or "thanks" in query:
-                assistantVoice("You're welcome")
-            elif "get" in query or "prepare" in query:
-                if "morning" in query or "day" in query:
-                    return_morn_prep()
-            elif "tell" in query or "give" in query:
-                if "tasks" in query:
-                    return_tasks()
-            elif "hand" in query:
-                if "gesture" in query or "signs" in query:
-                    hand_gesture = -1
-                    while hand_gesture == -1:
-                        hand_gesture, not_found = gr.gestureRec()
-                        if hand_gesture == 1:
-                            return_morn_prep()
-                        elif hand_gesture == 2:
-                            hour, mins, format = return_time()
-                            assistantVoice("It is " + hour + " " + mins + format)
-                        elif hand_gesture == 3:
-                            assistantVoice("It is " + return_day() + " today")
+            query = query.split("and")
+            print(query)
+            for request in query:
+                if "what is the date" in request:
+                    day = return_day()
+                    date = return_date()
+                    assistantVoice("Today is " + day + " " + date)
+                elif "what is the day" in request:
+                    assistantVoice("It is " + return_day() + " today")
+                elif " time" in request:
+                    if "set " in request or "change" in request:
+                        if "24" in request:
+                            assistantVoice("Setting time to 24-hour format")
+                            database.set_date_format("24")
+                        if "12" in request:
+                            assistantVoice("Setting time to 12-hour format")
+                            database.set_date_format("12")
+                    else:
+                        hour, mins, format = return_time()
+                        assistantVoice("It is " + hour + " " + mins + format)
+                elif "search " in request:
+                    return_search(request)
+
+                # === All of these are statements referring to the hardware === #
+                elif "turn" in request or "switch" in request:
+                    if "all" in request and "on" in request:
+                        assistantVoice("Turning all devices on now")
+                        hardware.allDevicesOn()
+                    if "all" in request and "off" in request:
+                        assistantVoice("Turning all devices off now")
+                        hardware.allDevicesOff()
+                    if "fan" in request or "plug one" in request:
+                        assistantVoice("Toggling fan state now")
+                        hardware.deviceToggle("p1")
+                    if "desk" in request or "plug two" in request:
+                        assistantVoice("Toggling desk L.E.D. state now")
+                        hardware.deviceToggle("p2")
+                    if "light" in request or "bulb" in request:
+                        assistantVoice("Toggling room light state now")
+                        hardware.deviceToggle("b")
+                elif "increase" in request:
+                    if "saturation" in request:
+                        assistantVoice(hardware.increaseSaturation())
+                    else:
+                        assistantVoice(hardware.increaseHue())
+                elif "decrease" in request:
+                    if "saturation" in request:
+                        assistantVoice(hardware.decreaseSaturation())
+                    else:
+                        assistantVoice(hardware.decreaseHue())
+                elif "energy usage" in request:
+                    assistantVoice(hardware.showEnergyUsage())
+
+                elif "thank you" in request or "thanks" in request:
+                    assistantVoice("You're welcome")
+                elif "get" in request or "prepare" in request:
+                    if "morning" in request or "day" in request:
+                        return_morn_prep()
+                elif "tell" in request or "give" in request:
+                    if "tasks" in request:
+                        return_tasks()
+                elif "hand" in request:
+                    if "gesture" in request or "signs" in request:
+                        hand_gesture = -1
+                        while hand_gesture == -1:
+                            hand_gesture, not_found = gr.gestureRec()
+                            if hand_gesture == 1:
+                                hardware.deviceToggle("p1")
+                            elif hand_gesture == 2:
+                                hardware.deviceToggle("p2")
+                            elif hand_gesture == 3:
+                                hardware.deviceToggle("b")
+                            elif hand_gesture == 4:
+                                hardware.allDevicesOn()
+                            elif hand_gesture == 4:
+                                hardware.allDevicesOff()
 
 if __name__ == "__main__":
     database = db.database()
     engine = pyttsx3.init()
+    hardware = hd.Hardware("192.168.1.170", "192.168.1.175", "192.168.1.97", "damiolatunji4tj@gmail.com", "party39ta3")
+
     while True:
         process_query()
