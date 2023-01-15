@@ -219,8 +219,7 @@ def getAudio():
 def process_query():
     # This makes sure that queries will be constantly processed
     while True:
-        # query = getAudio().lower()
-        query = "hey assistant prepare me for the morning"
+        query = getAudio().lower()
         if query == "None":
             break
         elif "assistant" in query:

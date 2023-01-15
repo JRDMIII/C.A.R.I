@@ -1,5 +1,6 @@
 # This is what we will use to create databases and alter them
 import sqlite3
+import uuid
 
 class database():
     def __init__(self):
@@ -25,7 +26,7 @@ class database():
 
     # === These are the setters and getters for the date format element === #
     def get_loggedInStatus(self):
-        self.c.execute("SELECT loggedIn FROM profile")
+        self.c.execute("SELECT loggedIn FROM currentStatus")
         return self.c.fetchone()
 
     def set_loggedInStatus(self, status):
@@ -77,10 +78,39 @@ class database():
 
     ### These are all the database subroutines which need to be created ###
 
-    def login(self, email, password):
-        return 1
+    def login(self, email, passwordAttempt):
+        self.c.execute(f"""
+        SELECT password FROM tblAccounts 
+        WHERE email="{email}" 
+        """)
+        password = self.c.fetchone()[0]
+        if password == passwordAttempt:
+
 
     def register(self, email, password, first_name, last_name):
+        try:
+            randomID = "0" + str(uuid.uuid4())
+            print(randomID)
+
+            self.c.execute(f"""
+            INSERT INTO tblAccounts
+            (userID, email, password, firstName, lastName)
+            VALUES 
+            ("{randomID}", "{email}", "{password}", "{first_name}", "{last_name}")
+            """)
+            self.conn.commit()
+            return "Success!"
+        except:
+            return "Failed"
 
     def end(self):
         self.conn.close()
+
+def main():
+    db = database()
+    db.login("damiolatunji@gmail.com", "party393")
+
+
+
+
+main()
