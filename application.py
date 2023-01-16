@@ -1,7 +1,6 @@
 # This is the module that will be used to create the UI
 import sqlite3
 import tkinter
-from PIL import Image, ImageTk
 import time
 
 import ui_creation as tui
@@ -23,11 +22,6 @@ ct.set_default_color_theme("dark-blue")
 
 # This is what we will use to create databases and alter them
 import traceback
-import uuid
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
-from firebase_admin import auth
 
 class Application(ct.CTk):
 
@@ -39,18 +33,10 @@ class Application(ct.CTk):
     def __init__(self):
         super().__init__()
 
-        self.cred = credentials.Certificate("firebaseAuth/cari-a5744-firebase-adminsdk-v83yb-6d2209d2fc.json")
-        self.app = firebase_admin.initialize_app(self.cred)
-        self.fs = firestore.client()
-        self.auth = firebase_admin.auth
-
         self.db = application_database.database()
 
         self.loggedIn = self.db.get_loggedInStatus()
         print(self.loggedIn)
-
-        # self.db = database.database()
-        self.uid = ""
 
         # Defining certain app dimensions
         self.frame_left_width = 200
@@ -65,20 +51,15 @@ class Application(ct.CTk):
         self.title("C.A.R.I")
         self.protocol("WM_DELETE_WINDOW", self.close)
 
-        if 0 in self.loggedIn:
+        if "Yes" in self.loggedIn:
             self.create_login_screen()
         else:
-            email = self.db.get_email()
-
-            self.user = self.auth.get_user_by_email(email)
-            self.uid = self.user.uid
+            self.uid = self.db.getUserID()
             self.create_main_screen()
 
     # === This is where the contents of all the pages will be designed === #
 
     def create_main_screen(self):
-        self.db.set_loggedInStatus(1)
-        self.db.set_email(self.user.email)
         # ==== Here we are creating the frames which the app will be in ==== #
         self.grid_columnconfigure(0, weight=0)
         self.grid_rowconfigure(0, weight=0)
