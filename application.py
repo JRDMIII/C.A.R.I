@@ -21,7 +21,6 @@ ct.set_appearance_mode("System")
 ct.set_default_color_theme("dark-blue")
 
 # This is what we will use to create databases and alter them
-import traceback
 
 class Application(ct.CTk):
 
@@ -35,8 +34,7 @@ class Application(ct.CTk):
 
         self.db = application_database.database()
 
-        self.loggedIn = self.db.get_loggedInStatus()
-        print(self.loggedIn)
+        self.loggedIn = self.db.get_loggedInStatus()[0]
 
         # Defining certain app dimensions
         self.frame_left_width = 200
@@ -51,7 +49,7 @@ class Application(ct.CTk):
         self.title("C.A.R.I")
         self.protocol("WM_DELETE_WINDOW", self.close)
 
-        if "Yes" in self.loggedIn:
+        if "No" in self.loggedIn:
             self.create_login_screen()
         else:
             self.uid = self.db.getUserID()
@@ -120,7 +118,7 @@ class Application(ct.CTk):
         self.main_frame = ct.CTkFrame(master=self, corner_radius=0)
         self.main_frame.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
 
-        self.main_frame.rowconfigure(8, weight=10)
+        self.main_frame.rowconfigure(9, weight=10)
         self.main_frame.rowconfigure(1, weight=5)
         self.main_frame.columnconfigure(0, weight=1)
 
@@ -133,7 +131,7 @@ class Application(ct.CTk):
 
         # This creates the title for the software
         self.home_title = ct.CTkLabel(master=self.frame_right,
-                                      text="Welcome, {0}".format(self.user.display_name),
+                                      text="Welcome, {0}",
                                       font=self.title_font,
                                       text_color="white")
         self.home_title.grid(row=0, column=0, padx=20, pady=15)
@@ -165,6 +163,19 @@ class Application(ct.CTk):
             pady=10
         )
 
+        self.password_entry = ct.CTkEntry(
+            master=self.main_frame,
+            placeholder_text="Password",
+            width=180,
+            corner_radius=10
+        )
+        self.password_entry.grid(
+            column=0,
+            row=6,
+            padx=10,
+            pady=10
+        )
+
         self.login_btn = ct.CTkButton(
             master=self.main_frame,
             text="Log In",
@@ -174,7 +185,7 @@ class Application(ct.CTk):
         )
         self.login_btn.grid(
             column=0,
-            row=6,
+            row=7,
             padx=10,
             pady=10
         )
@@ -188,7 +199,7 @@ class Application(ct.CTk):
         )
         self.register_btn.grid(
             column=0,
-            row=7,
+            row=8,
             padx=10,
         )
 
@@ -204,19 +215,6 @@ class Application(ct.CTk):
         self.register_title.grid(column=0, row=2, padx=5, pady=30)
         self.register_title.configure()
 
-        self.username_entry = ct.CTkEntry(
-            master=self.main_frame,
-            placeholder_text="Username",
-            width=180,
-            corner_radius=10
-        )
-        self.username_entry.grid(
-            column=0,
-            row=3,
-            padx=10,
-            pady=10
-        )
-
         self.first_name_entry = ct.CTkEntry(
             master=self.main_frame,
             placeholder_text="First Name",
@@ -225,7 +223,7 @@ class Application(ct.CTk):
         )
         self.first_name_entry.grid(
             column=0,
-            row=4,
+            row=3,
             padx=10,
             pady=10
         )
@@ -238,7 +236,7 @@ class Application(ct.CTk):
         )
         self.last_name_entry.grid(
             column=0,
-            row=5,
+            row=4,
             padx=10,
             pady=10
         )
@@ -250,6 +248,19 @@ class Application(ct.CTk):
             corner_radius=10
         )
         self.email_entry.grid(
+            column=0,
+            row=5,
+            padx=10,
+            pady=10
+        )
+
+        self.password_entry = ct.CTkEntry(
+            master=self.main_frame,
+            placeholder_text="Password",
+            width=180,
+            corner_radius=10
+        )
+        self.password_entry.grid(
             column=0,
             row=6,
             padx=10,
@@ -330,51 +341,31 @@ class Application(ct.CTk):
                                       font=self.normal_font)
         self.name_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
 
-        # This button will be used to save all the settings chosen to the database
-        self.save_btn = CTkButton
-
     def history(self):
         for child in self.frame_right.winfo_children():
             child.destroy()
 
-
     def create_account(self):
-        name = self.first_name_entry.get()
-        surname = self.last_name_entry.get()
+        firstname = self.first_name_entry.get()
+        lastname = self.last_name_entry.get()
         email = self.email_entry.get()
-        username = self.username_entry.get()
+        password = self.password_entry.get()
 
-        try:
-            user = self.auth.create_user(
-                email=email,
-                display_name=username,
-            )
-
-            data = {
-                u'uid': user.uid,
-                u'name': name,
-                u'surname': surname,
-                u'email': email,
-            }
-            user_id = str(user.uid)
-            newDoc = self.fs.collection(u'users').document(u'{}'.format(user_id))
-            newDoc.set(data)
-
-            self.user = self.auth.get_user(user.uid)
-            self.uid = self.user.uid
-            print(self.user.display_name)
-            self.create_main_screen()
-        except:
-            error = traceback.print_exc()
-            print(error)
-            print("Error occurred while creating an account")
+        self.db.register(email, password, firstname, lastname)
 
     def login(self):
-        try:
-            self.user = self.auth.get_user_by_email(self.email_entry.get())
-            self.uid = self.user.uid
+        email = self.email_entry.get()
+        password = self.password_entry.get()
+
+        print(email)
+        print(password)
+
+        return_code = self.db.login(email, password)
+        print(return_code)
+
+        if return_code[0] == True:
             self.create_main_screen()
-        except:
+        else:
             print("Retry")
 
     def get_user_info(self, user_id):

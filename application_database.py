@@ -71,16 +71,18 @@ class database():
 
     ### These are all the database subroutines which need to be created ###
 
-    def login(self, email, passwordAttempt):
-        try:
+    def login(self, emailAttempt, passwordAttempt):
+        #try:
             self.c.execute(f"""
             SELECT email, password FROM tblAccounts
-            WHERE email="{email}" 
+            WHERE email="{emailAttempt}" 
             """)
 
             result = self.c.fetchone()
 
             email, password = result[0], result[1]
+            print(email + " " + password)
+            print(emailAttempt + " " + passwordAttempt)
 
             if password == passwordAttempt:
                 self.c.execute(f"""
@@ -89,18 +91,27 @@ class database():
                 """)
 
                 userID = str(self.c.fetchone()[0])
+                print(userID)
 
                 self.c.execute(f"""
-                INSERT INTO tblCurrentStatus(userID, loggedIn)
-                VALUES ("{userID}", "Yes")
+                UPDATE tblCurrentStatus
+                SET userID="{userID}"
+                WHERE loggedIn="No"
+                """)
+                self.conn.commit()
+
+                self.c.execute(f"""
+                UPDATE tblCurrentStatus
+                SET loggedIn="Yes"
+                WHERE loggedIn="{userID}"
                 """)
                 self.conn.commit()
 
                 return True, "001"
             else:
                 return False, "002"
-        except:
-            return False, "003"
+        #except:
+            #return False, "003"
 
     def logout(self, uid):
         try:
@@ -150,13 +161,3 @@ class database():
 
     def end(self):
         self.conn.close()
-
-def main():
-    db = database()
-    print(db.login("damiolatunji@gmail.com", "party393")[1])
-    print(db.logout("01b7e4198-d3ca-4d65-a98a-6f2e17d613ae")[1])
-
-
-
-
-main()
