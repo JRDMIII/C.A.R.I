@@ -90,14 +90,14 @@ class Application(ct.CTk):
                                         height=self.button_height,
                                         command=self.home_screen)
         self.home_button.grid(row=2, column=0)
-        self.workouttracker_button = ct.CTkButton(master=self.frame_left,
-                                                  text="Workout Tracker",
+        self.devices_button = ct.CTkButton(master=self.frame_left,
+                                                  text="Devices",
                                                   font=self.title_font,
                                                   fg_color="gray",
                                                   corner_radius=0,
                                                   width=self.frame_left_width,
                                                   height=self.button_height)
-        self.workouttracker_button.grid(row=3, column=0)
+        self.devices_button.grid(row=3, column=0)
         self.settings_button = ct.CTkButton(master=self.frame_left,
                                                text="Settings",
                                                font=self.title_font,
@@ -131,7 +131,7 @@ class Application(ct.CTk):
 
         # This creates the title for the software
         self.home_title = ct.CTkLabel(master=self.frame_right,
-                                      text="Welcome, {0}",
+                                      text="Welcome, {0}".format(self.db.get_name()[0]),
                                       font=self.title_font,
                                       text_color="white")
         self.home_title.grid(row=0, column=0, padx=20, pady=15)
@@ -313,7 +313,7 @@ class Application(ct.CTk):
 
         # Creating the time format setting
 
-        time_format = str(self.db.get_date_format())[1:3]
+        time_format = str(self.db.get_time_format()[0])
         self.format = time_format + "-Hour Format"
 
         self.format_switch = ct.CTkSwitch(master=self.frame_va_settings,
@@ -341,10 +341,6 @@ class Application(ct.CTk):
                                       font=self.normal_font)
         self.name_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
 
-    def history(self):
-        for child in self.frame_right.winfo_children():
-            child.destroy()
-
     def create_account(self):
         firstname = self.first_name_entry.get()
         lastname = self.last_name_entry.get()
@@ -353,28 +349,18 @@ class Application(ct.CTk):
 
         self.db.register(email, password, firstname, lastname)
 
+        self.create_main_screen()
+
     def login(self):
         email = self.email_entry.get()
         password = self.password_entry.get()
 
-        print(email)
-        print(password)
-
         return_code = self.db.login(email, password)
-        print(return_code)
 
         if return_code[0] == True:
             self.create_main_screen()
         else:
             print("Retry")
-
-    def get_user_info(self, user_id):
-        docRef = self.fs.collection(u'users').document(u'{}'.format(user_id))
-        doc = docRef.get()
-        if doc.exists:
-            self.user_info = doc
-        else:
-            self.user_info = None
 
     # This will define what happens when the exit button is pressed
     def close(self, event=0):

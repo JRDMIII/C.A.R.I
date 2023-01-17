@@ -39,25 +39,25 @@ class database():
 
     # === These are the setters and getters for the name element === #
     def get_name(self):
-        self.c.execute("SELECT name FROM tblAccounts")
+        self.c.execute("SELECT firstName FROM tblAccounts")
         return self.c.fetchone()
 
     def set_name(self, name):
         self.c.execute(f"""
-        UPDATE settings
-        SET name='{name}';
+        UPDATE tblSettings
+        SET firstName='{name}';
     """)
         self.conn.commit()
 
     # === These are the setters and getters for the date format element === #
-    def get_date_format(self):
-        self.c.execute("SELECT date_format FROM settings")
+    def get_time_format(self):
+        self.c.execute("SELECT time_format FROM tblSettings")
         return self.c.fetchone()
 
-    def set_date_format(self, format):
+    def set_time_format(self, format):
         self.c.execute(f"""
-        UPDATE settings
-        SET date_format='{format}';
+        UPDATE tblSettings
+        SET time_format='{format}';
     """)
         self.conn.commit()
 
@@ -103,7 +103,7 @@ class database():
                 self.c.execute(f"""
                 UPDATE tblCurrentStatus
                 SET loggedIn="Yes"
-                WHERE loggedIn="{userID}"
+                WHERE userID="{userID}"
                 """)
                 self.conn.commit()
 
@@ -147,6 +147,14 @@ class database():
             VALUES 
             ("{randomID}", "{email}", "{password}", "{first_name}", "{last_name}")
             """)
+            self.conn.commit()
+
+            self.c.execute(f"""
+                        INSERT INTO tblSettings
+                        (userID, colourID, textID, time_format)
+                        VALUES 
+                        ("{randomID}", "001", "default", "24")
+                        """)
             self.conn.commit()
 
             self.login(email, password)
