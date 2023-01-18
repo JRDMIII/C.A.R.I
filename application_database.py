@@ -13,7 +13,11 @@ class database():
 
     # === These are the setters and getters for the name element === #
     def get_email(self):
-        self.c.execute("SELECT email FROM tblAccounts")
+        uid = self.getUserID()[0]
+
+        self.c.execute(f"""SELECT email FROM tblAccounts
+               WHERE userID="{uid}"
+               """)
         result = self.c.fetchone()[0]
         return result
 
@@ -26,7 +30,6 @@ class database():
 
     def get_plug1IP(self):
         uid = self.getUserID()[0]
-        print(uid)
 
         self.c.execute(f"""SELECT plugOneIP FROM tblSettings
         WHERE userID="{uid}"
@@ -36,7 +39,7 @@ class database():
 
     def set_plug1IP(self, IP):
         uid = self.getUserID()[0]
-        print(uid)
+        
 
         try:
             self.c.execute(f"""
@@ -51,7 +54,7 @@ class database():
 
     def get_plug2IP(self):
         uid = self.getUserID()[0]
-        print(uid)
+        
 
         self.c.execute(f"""SELECT plugTwoIP FROM tblSettings
         WHERE userID="{uid}"
@@ -62,7 +65,7 @@ class database():
 
     def set_plug2IP(self, IP):
         uid = self.getUserID()[0]
-        print(uid)
+        
 
         try:
             self.c.execute(f"""
@@ -77,7 +80,7 @@ class database():
 
     def get_bulbIP(self):
         uid = self.getUserID()[0]
-        print(uid)
+        
 
         self.c.execute(f"""SELECT bulbIP FROM tblSettings
         WHERE userID="{uid}"
@@ -88,13 +91,38 @@ class database():
 
     def set_bulbIP(self, IP):
         uid = self.getUserID()[0]
-        print(uid)
+        
 
         try:
             self.c.execute(f"""
             UPDATE tblSettings
             SET bulbIP='{IP}'
             WHERE userID="{uid};
+        """)
+            self.conn.commit()
+            return "Success"
+        except:
+            return "Failed"
+
+    def get_theme(self):
+        self.c.execute(f"""
+        SELECT tblSettings.colourID, tblColourPresets.presetPath
+        FROM tblSettings
+        INNER JOIN tblColourPresets
+        ON tblSettings.colourID=tblColourPresets.colourPresetID
+        """)
+        result = self.c.fetchone()[1]
+        return result
+
+    def set_theme(self, ID):
+        uid = self.getUserID()[0]
+        
+
+        try:
+            self.c.execute(f"""
+            UPDATE tblSettings
+            SET colourID='{ID}'
+            WHERE userID="{uid}";
         """)
             self.conn.commit()
             return "Success"
@@ -108,12 +136,15 @@ class database():
 
     # === These are the setters and getters for the name element === #
     def get_name(self):
-        self.c.execute("SELECT firstName FROM tblAccounts")
-        return self.c.fetchone()
+        uid = self.getUserID()[0]
+
+        self.c.execute(f"""SELECT firstName FROM tblAccounts
+               WHERE userID="{uid}"
+               """)
+        return self.c.fetchone()[0]
 
     def set_name(self, name):
         uid = self.getUserID()[0]
-        print(uid)
 
         self.c.execute(f"""
         UPDATE tblAccounts
@@ -154,8 +185,6 @@ class database():
             result = self.c.fetchone()
 
             email, password = result[0], result[1]
-            print(email + " " + password)
-            print(emailAttempt + " " + passwordAttempt)
 
             if password == passwordAttempt:
                 self.c.execute(f"""
@@ -164,7 +193,6 @@ class database():
                 """)
 
                 userID = str(self.c.fetchone()[0])
-                print(userID)
 
                 self.c.execute(f"""
                 UPDATE tblCurrentStatus
@@ -214,7 +242,6 @@ class database():
     def register(self, email, password, first_name, last_name):
         try:
             randomID = "0" + str(uuid.uuid4())
-            print(randomID)
 
             self.c.execute(f"""
             INSERT INTO tblAccounts

@@ -48,6 +48,7 @@ class Application(ct.CTk):
         self.resizable(False, False)
         self.title("C.A.R.I")
         self.protocol("WM_DELETE_WINDOW", self.close)
+        ct.set_default_color_theme(self.db.get_theme())
 
         if "No" in self.loggedIn:
             self.create_login_screen()
@@ -99,7 +100,8 @@ class Application(ct.CTk):
                                                   fg_color="gray",
                                                   corner_radius=0,
                                                   width=self.frame_left_width,
-                                                  height=self.button_height)
+                                                  height=self.button_height,
+                                                  command=self.devices_screen)
         self.devices_button.grid(row=3, column=0)
         self.settings_button = ct.CTkButton(master=self.frame_left,
                                                text="Settings",
@@ -339,7 +341,7 @@ class Application(ct.CTk):
                                       font=self.normal_font)
         self.name_title.grid(row=4, column=0, padx=15, pady=0, sticky="w")
 
-        name = str(self.db.get_name()[0])
+        name = str(self.db.get_name())
 
         self.name_entry = ct.CTkEntry(master=self.frame_va_settings,
                                       placeholder_text=name,
@@ -379,6 +381,19 @@ class Application(ct.CTk):
                                          font=self.normal_font)
         self.bulbIP_entry.grid(row=7, column=0, padx=15, pady=15, sticky="we")
 
+        # Creating the name setting
+        self.colour_theme_title = ct.CTkLabel(master=self.frame_app_settings,
+                                              text="App Colour Theme",
+                                              font=self.normal_font)
+        self.colour_theme_title.grid(row=8, column=0, padx=15, pady=0, sticky="w")
+        self.colour_theme_var = ct.StringVar(value=(self.db.get_theme()).replace("-", " "))
+        self.colour_theme_entry = ct.CTkComboBox(master=self.frame_app_settings,
+                                                 values=["dark blue", "green", "blue"],
+                                                 command=self.colourThemeCallback,
+                                                 variable=self.colour_theme_var,
+                                              font=self.normal_font)
+        self.colour_theme_entry.grid(row=9, column=0, padx=15, pady=15, sticky="we")
+
         self.save_btn = ct.CTkButton(
             master=self.frame_right,
             text="Save",
@@ -395,8 +410,26 @@ class Application(ct.CTk):
             sticky="we"
         )
 
+    def colourThemeCallback(self, choice):
+        self.colour_theme_var.set(choice)
+        print(self.colour_theme_var.get())
+
     # This is where the home page will be defined
     def home_screen(self):
+        for child in self.frame_right.winfo_children():
+            child.destroy()
+
+        self.frame_right.grid_columnconfigure(1, weight=0)
+        self.frame_right.grid_columnconfigure(0, weight=0)
+
+        # This creates the title for the software
+        self.home_title = ct.CTkLabel(master=self.frame_right,
+                                      text="Welcome, {0}".format(self.db.get_name()),
+                                      font=self.title_font,
+                                      text_color="white")
+        self.home_title.grid(row=0, column=0, padx=20, pady=15)
+
+    def devices_screen(self):
         for child in self.frame_right.winfo_children():
             child.destroy()
 
@@ -468,6 +501,17 @@ class Application(ct.CTk):
             self.db.set_plug2IP(plug2IP)
         else:
             pass
+
+        # This checks what colour theme is currently selected
+        # and saves the corresponding ID into the settings table
+
+        colourTheme = self.colour_theme_var.get()
+        if colourTheme == "dark blue":
+            self.db.set_theme("001")
+        if colourTheme == "blue":
+            self.db.set_theme("002")
+        if colourTheme == "green":
+            self.db.set_theme("003")
 
         print(self.db.get_all_settings())
 
