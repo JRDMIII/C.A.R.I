@@ -59,6 +59,9 @@ class Application(ct.CTk):
 
     def create_main_screen(self):
         # ==== Here we are creating the frames which the app will be in ==== #
+        for child in self.winfo_children():
+            child.destroy()
+
         self.grid_columnconfigure(0, weight=0)
         self.grid_rowconfigure(0, weight=0)
 
@@ -107,11 +110,25 @@ class Application(ct.CTk):
                                                height=self.button_height,
                                                command=self.settings_screen)
         self.settings_button.grid(row=4, column=0)
+        self.logout_button = ct.CTkButton(master=self.frame_left,
+                                            text="Logout",
+                                            font=self.title_font,
+                                            corner_radius=0,
+                                            width=self.frame_left_width,
+                                            height=self.button_height,
+                                            command=self.logout)
+        self.logout_button.grid(row=5, column=0)
         # This makes sure that the home page is the first thing that is shown
         self.home_screen()
 
     def create_login_screen(self):
         # ==== Here we are creating the frames which the app will be in ==== #
+        for child in self.winfo_children():
+            child.destroy()
+
+        self.grid_columnconfigure(1, weight=0)
+        self.grid_rowconfigure(0, weight=0)
+
         self.grid_columnconfigure(0, weight=5)
         self.grid_rowconfigure(0, weight=1)
 
@@ -123,19 +140,6 @@ class Application(ct.CTk):
         self.main_frame.columnconfigure(0, weight=1)
 
         self.login_screen()
-
-    # This is where the home page will be defined
-    def home_screen(self):
-        for child in self.frame_right.winfo_children():
-            child.destroy()
-
-        # This creates the title for the software
-        self.home_title = ct.CTkLabel(master=self.frame_right,
-                                      text="Welcome, {0}".format(self.db.get_name()[0]),
-                                      font=self.title_font,
-                                      text_color="white")
-        self.home_title.grid(row=0, column=0, padx=20, pady=15)
-        self.home_title.configure()
 
     # This is where the home page will be defined
     def login_screen(self):
@@ -287,12 +291,13 @@ class Application(ct.CTk):
 
         self.frame_right.grid_columnconfigure(1, weight=1)
         self.frame_right.grid_columnconfigure(0, weight=1)
+        self.frame_right.grid_rowconfigure(1, weight=1)
 
-        self.frame_va_settings = ct.CTkFrame(master=self.frame_right, corner_radius=0)
-        self.frame_va_settings.grid(row=1, column=0, sticky="nswe", padx=20, pady=20)
+        self.frame_va_settings = ct.CTkFrame(master=self.frame_right, corner_radius=10)
+        self.frame_va_settings.grid(row=1, column=0, sticky="nswe", padx=10, pady=20)
 
-        self.frame_app_settings = ct.CTkFrame(master=self.frame_right, corner_radius=0)
-        self.frame_app_settings.grid(row=1, column=1, sticky="nswe", padx=20, pady=20)
+        self.frame_app_settings = ct.CTkFrame(master=self.frame_right, corner_radius=10)
+        self.frame_app_settings.grid(row=1, column=1, sticky="nswe", padx=10, pady=20)
 
         self.settings_title = ct.CTkLabel(master=self.frame_right,
                                       text="Settings",
@@ -334,12 +339,76 @@ class Application(ct.CTk):
                                       font=self.normal_font)
         self.name_title.grid(row=4, column=0, padx=15, pady=0, sticky="w")
 
-        name = str(self.db.get_name())[2:-3]
+        name = str(self.db.get_name()[0])
 
         self.name_entry = ct.CTkEntry(master=self.frame_va_settings,
                                       placeholder_text=name,
                                       font=self.normal_font)
         self.name_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
+
+        # Creating the plug1IP setting
+        self.plug1IP_title = ct.CTkLabel(master=self.frame_app_settings,
+                                      text="Plug 1's IP Address",
+                                      font=self.normal_font)
+        self.plug1IP_title.grid(row=2, column=0, padx=15, pady=0, sticky="w")
+        plug1IP = self.db.get_plug1IP()
+        self.plug1IP_entry = ct.CTkEntry(master=self.frame_app_settings,
+                                      placeholder_text=plug1IP,
+                                      font=self.normal_font)
+        self.plug1IP_entry.grid(row=3, column=0, padx=15, pady=15, sticky="we")
+
+        # Creating the plug1IP setting
+        self.plug2IP_title = ct.CTkLabel(master=self.frame_app_settings,
+                                         text="Plug 2's IP Address",
+                                         font=self.normal_font)
+        self.plug2IP_title.grid(row=4, column=0, padx=15, pady=0, sticky="w")
+        plug2IP = self.db.get_plug2IP()
+        self.plug2IP_entry = ct.CTkEntry(master=self.frame_app_settings,
+                                         placeholder_text=plug2IP,
+                                         font=self.normal_font)
+        self.plug2IP_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
+
+        # Creating the plug1IP setting
+        self.bulbIP_title = ct.CTkLabel(master=self.frame_app_settings,
+                                         text="Bulb's IP Address",
+                                         font=self.normal_font)
+        self.bulbIP_title.grid(row=6, column=0, padx=15, pady=0, sticky="w")
+        bulbIP = self.db.get_bulbIP()
+        self.bulbIP_entry = ct.CTkEntry(master=self.frame_app_settings,
+                                         placeholder_text=bulbIP,
+                                         font=self.normal_font)
+        self.bulbIP_entry.grid(row=7, column=0, padx=15, pady=15, sticky="we")
+
+        self.save_btn = ct.CTkButton(
+            master=self.frame_right,
+            text="Save",
+            width=120,
+            corner_radius=10,
+            command=self.save_format
+        )
+        self.save_btn.grid(
+            column=0,
+            columnspan=2,
+            row=2,
+            padx=10,
+            pady=10,
+            sticky="we"
+        )
+
+    # This is where the home page will be defined
+    def home_screen(self):
+        for child in self.frame_right.winfo_children():
+            child.destroy()
+
+        self.frame_right.grid_columnconfigure(1, weight=0)
+        self.frame_right.grid_columnconfigure(0, weight=0)
+
+        # This creates the title for the software
+        self.home_title = ct.CTkLabel(master=self.frame_right,
+                                      text="Welcome, {0}".format(self.db.get_name()[0]),
+                                      font=self.title_font,
+                                      text_color="white")
+        self.home_title.grid(row=0, column=0, padx=20, pady=15)
 
     def create_account(self):
         firstname = self.first_name_entry.get()
@@ -350,6 +419,11 @@ class Application(ct.CTk):
         self.db.register(email, password, firstname, lastname)
 
         self.create_main_screen()
+
+    def logout(self):
+        self.db.logout()
+
+        self.create_login_screen()
 
     def login(self):
         email = self.email_entry.get()
@@ -376,10 +450,24 @@ class Application(ct.CTk):
     # This will define what happens when the save button is pressed in the exit menu
     def save_format(self):
         time_format = self.format_switch.get()
-        self.db.set_date_format(time_format)
+        self.db.set_time_format(time_format)
 
         name = self.name_entry.get()
         self.db.set_name(name)
+
+        plug1IP = self.plug1IP_entry.get()
+
+        if plug1IP != "":
+            self.db.set_plug1IP(plug1IP)
+        else:
+            pass
+
+        plug2IP = self.plug2IP_entry.get()
+
+        if plug2IP != "":
+            self.db.set_plug2IP(plug2IP)
+        else:
+            pass
 
         print(self.db.get_all_settings())
 

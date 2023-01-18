@@ -24,18 +24,87 @@ class database():
     """)
         self.conn.commit()
 
+    def get_plug1IP(self):
+        uid = self.getUserID()[0]
+        print(uid)
+
+        self.c.execute(f"""SELECT plugOneIP FROM tblSettings
+        WHERE userID="{uid}"
+        """)
+        result = self.c.fetchone()[0]
+        return result
+
+    def set_plug1IP(self, IP):
+        uid = self.getUserID()[0]
+        print(uid)
+
+        try:
+            self.c.execute(f"""
+            UPDATE tblSettings
+            SET plugOneIP='{IP}'
+            WHERE userID="{uid}"
+        """)
+            self.conn.commit()
+            return "Success"
+        except:
+            return "Failed"
+
+    def get_plug2IP(self):
+        uid = self.getUserID()[0]
+        print(uid)
+
+        self.c.execute(f"""SELECT plugTwoIP FROM tblSettings
+        WHERE userID="{uid}"
+        """)
+        result = self.c.fetchone()[0]
+        print(result)
+        return result
+
+    def set_plug2IP(self, IP):
+        uid = self.getUserID()[0]
+        print(uid)
+
+        try:
+            self.c.execute(f"""
+            UPDATE tblSettings
+            SET plugTwoIP='{IP}'
+            WHERE userID="{uid}";
+        """)
+            self.conn.commit()
+            return "Success"
+        except:
+            return "Failed"
+
+    def get_bulbIP(self):
+        uid = self.getUserID()[0]
+        print(uid)
+
+        self.c.execute(f"""SELECT bulbIP FROM tblSettings
+        WHERE userID="{uid}"
+        """)
+        result = self.c.fetchone()[0]
+        print(result)
+        return result
+
+    def set_bulbIP(self, IP):
+        uid = self.getUserID()[0]
+        print(uid)
+
+        try:
+            self.c.execute(f"""
+            UPDATE tblSettings
+            SET bulbIP='{IP}'
+            WHERE userID="{uid};
+        """)
+            self.conn.commit()
+            return "Success"
+        except:
+            return "Failed"
+
     # === These are the setters and getters for the date format element === #
     def get_loggedInStatus(self):
         self.c.execute("SELECT loggedIn FROM tblCurrentStatus")
         return self.c.fetchone()
-
-    # === This will show the entire database - for debugging purposes === #
-    def get_all_profile(self):
-        self.c.execute("""
-        SELECT *
-        FROM profile
-        """)
-        return self.c.fetchall()
 
     # === These are the setters and getters for the name element === #
     def get_name(self):
@@ -43,9 +112,13 @@ class database():
         return self.c.fetchone()
 
     def set_name(self, name):
+        uid = self.getUserID()[0]
+        print(uid)
+
         self.c.execute(f"""
-        UPDATE tblSettings
-        SET firstName='{name}';
+        UPDATE tblAccounts
+        SET firstName='{name}'
+        WHERE userID="{uid}";
     """)
         self.conn.commit()
 
@@ -72,7 +145,7 @@ class database():
     ### These are all the database subroutines which need to be created ###
 
     def login(self, emailAttempt, passwordAttempt):
-        #try:
+        try:
             self.c.execute(f"""
             SELECT email, password FROM tblAccounts
             WHERE email="{emailAttempt}" 
@@ -110,11 +183,13 @@ class database():
                 return True, "001"
             else:
                 return False, "002"
-        #except:
-            #return False, "003"
+        except:
+            return False, "003"
 
-    def logout(self, uid):
+    def logout(self):
         try:
+            uid = self.getUserID()[0]
+
             # This changes the loggedIn boolean value to "No" so when the
             # application sees it on startup it will show the login screen
             self.c.execute(f"""

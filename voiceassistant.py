@@ -2,7 +2,6 @@
 import time
 
 import csv
-from PyP100 import PyP110, PyL530
 
 # This module is what plays the voice assistants voice back to the user
 import pyttsx3
@@ -20,7 +19,7 @@ import webbrowser
 
 import requests
 
-import database as db
+import application_database as db
 import gestureRecognition as gr
 import hardware as hd
 
@@ -133,7 +132,7 @@ def return_time():
     time = str(datetime.datetime.now())
     hour, mins = time[11:13], time[14:16]
 
-    format = str(database.get_date_format())[1:3]
+    format = database.get_time_format()[0]
     # This if statement checks to see whether it is the afternoon or not
     isAfternoon = False
     if format == "12":
@@ -236,10 +235,10 @@ def process_query():
                     if "set " in request or "change" in request:
                         if "24" in request:
                             assistantVoice("Setting time to 24-hour format")
-                            database.set_date_format("24")
+                            database.set_time_format("24")
                         if "12" in request:
                             assistantVoice("Setting time to 12-hour format")
-                            database.set_date_format("12")
+                            database.set_time_format("12")
                     else:
                         hour, mins, format = return_time()
                         assistantVoice("It is " + hour + " " + mins + format)
@@ -303,7 +302,7 @@ def process_query():
 if __name__ == "__main__":
     database = db.database()
     engine = pyttsx3.init()
-    hardware = hd.Hardware("192.168.1.170", "192.168.1.175", "192.168.1.97", "damiolatunji4tj@gmail.com", "party39ta3")
+    hardware = hd.Hardware(database.get_plug1IP(), database.get_plug2IP(), database.get_bulbIP(), "damiolatunji4tj@gmail.com", "party39ta3")
 
     while True:
         process_query()
