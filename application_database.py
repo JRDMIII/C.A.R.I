@@ -34,8 +34,11 @@ class database():
         self.c.execute(f"""SELECT plugOneIP FROM tblSettings
         WHERE userID="{uid}"
         """)
-        result = self.c.fetchone()[0]
-        return result
+        try:
+            result = self.c.fetchone()[0]
+            return result
+        except:
+            return "*No IP added"
 
     def set_plug1IP(self, IP):
         uid = self.getUserID()[0]
@@ -59,9 +62,11 @@ class database():
         self.c.execute(f"""SELECT plugTwoIP FROM tblSettings
         WHERE userID="{uid}"
         """)
-        result = self.c.fetchone()[0]
-        print(result)
-        return result
+        try:
+            result = self.c.fetchone()[0]
+            return result
+        except:
+            return "*No IP added"
 
     def set_plug2IP(self, IP):
         uid = self.getUserID()[0]
@@ -80,14 +85,15 @@ class database():
 
     def get_bulbIP(self):
         uid = self.getUserID()[0]
-        
 
         self.c.execute(f"""SELECT bulbIP FROM tblSettings
         WHERE userID="{uid}"
         """)
-        result = self.c.fetchone()[0]
-        print(result)
-        return result
+        try:
+            result = self.c.fetchone()[0]
+            return result
+        except:
+            return "*No IP added"
 
     def set_bulbIP(self, IP):
         uid = self.getUserID()[0]

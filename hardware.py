@@ -4,17 +4,21 @@ class Hardware():
     def __init__(self, plugIP1, plugIP2, bulbIP, email, password):
         super().__init__()
 
-        self.plug1 = PyP110.P110(plugIP1, email, password)
-        self.plug1.handshake()
-        self.plug1.login()
+        try:
+            self.plug1 = PyP110.P110(plugIP1, email, password)
+            self.plug1.handshake()
+            self.plug1.login()
 
-        self.plug2 = PyP110.P110(plugIP2, email, password)
-        self.plug2.handshake()
-        self.plug2.login()
+            self.plug2 = PyP110.P110(plugIP2, email, password)
+            self.plug2.handshake()
+            self.plug2.login()
 
-        self.bulb = PyL530.L530(bulbIP, email, password)
-        self.bulb.handshake()
-        self.bulb.login()
+            self.bulb = PyL530.L530(bulbIP, email, password)
+            self.bulb.handshake()
+            self.bulb.login()
+        except:
+            print("Some of your devices may not work as you have not entered an ip address into the application")
+
 
     def allDevicesOn(self):
         self.plug1.turnOn()
