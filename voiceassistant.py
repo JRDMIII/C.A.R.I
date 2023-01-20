@@ -172,8 +172,11 @@ def return_search(query):
     webbrowser.open(search)
 
 def return_morn_prep():
-    name = str(database.get_name())[2:-3]
+    name = str(database.get_name())
     assistantVoice("Good Morning " + str(name) + ", hope you are feeling well!")
+
+    hardware.deviceToggle("b", True)
+    hardware.deviceToggle("p1", False)
 
     # This fetches all the values from the return subroutines and saves them to local variables
     hour, mins, format = return_time()
@@ -190,6 +193,54 @@ def return_morn_prep():
 
     return_tasks()
     assistantVoice("Hope you have a great day!")
+
+def return_night_prep():
+    name = str(database.get_name())[2:-3]
+    assistantVoice("Good Evening " + str(name) + ", hope you are feeling well and ready to sleep!")
+
+    hardware.deviceToggle("p1", True)
+
+    # This fetches all the values from the return subroutines and saves them to local variables
+    hour, mins, format = return_time()
+    day, date = return_day(), return_date()
+
+    assistantVoice("It is " + hour + " " + mins + format)
+    assistantVoice("Today is " + day + " " + date)
+    return_weather()
+
+    hardware.deviceToggle("b", False)
+
+    assistantVoice("The lights have been turned off and the fan is now on")
+    time.sleep(0.1)
+    assistantVoice("Make sure you have set all the alarms you need to!")
+    time.sleep(0.1)
+    assistantVoice("Have a very good night")
+
+
+
+    # This is the sequence to make the light perform goodnight in morse code in a very soft light
+
+    hardware.changeLightSettings(160, 0, 5, "invalid")
+
+    hardware.deviceToggle("b", True)
+    time.sleep(0.3)
+    hardware.deviceToggle("b", False)
+    time.sleep(0.05)
+    hardware.deviceToggle("b", True)
+    time.sleep(0.3)
+    hardware.deviceToggle("b", False)
+    time.sleep(0.05)
+    hardware.deviceToggle("b", True)
+    time.sleep(0.08)
+    hardware.deviceToggle("b", False)
+    time.sleep(0.8)
+    hardware.deviceToggle("b", True)
+    time.sleep(0.3)
+    hardware.deviceToggle("b", False)
+    time.sleep(0.05)
+    hardware.deviceToggle("b", True)
+    time.sleep(0.08)
+    hardware.deviceToggle("b", False)
 
 
 # This subroutine will produce the audio file which the voice assistant will play back
@@ -255,13 +306,13 @@ def process_query():
                         hardware.allDevicesOff()
                     if "fan" in request or "plug one" in request:
                         assistantVoice("Toggling fan state now")
-                        hardware.deviceToggle("p1")
+                        hardware.deviceToggle("p1", "toggle")
                     if "desk" in request or "plug two" in request:
                         assistantVoice("Toggling desk L.E.D. state now")
-                        hardware.deviceToggle("p2")
+                        hardware.deviceToggle("p2", "toggle")
                     if "light" in request or "bulb" in request:
                         assistantVoice("Toggling room light state now")
-                        hardware.deviceToggle("b")
+                        hardware.deviceToggle("b", "toggle")
                 elif "increase" in request:
                     if "saturation" in request:
                         assistantVoice(hardware.increaseSaturation())
@@ -280,6 +331,8 @@ def process_query():
                 elif "get" in request or "prepare" in request:
                     if "morning" in request or "day" in request:
                         return_morn_prep()
+                    if "night" in request or "sleep" in request or "bed" in request:
+                        return_night_prep()
                 elif "tell" in request or "give" in request:
                     if "tasks" in request:
                         return_tasks()

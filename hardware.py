@@ -19,6 +19,19 @@ class Hardware():
         except:
             print("Some of your devices may not work as you have not entered an ip address into the application")
 
+    def getDeviceStatus(self, device_name):
+        if device_name == "p1":
+            result = self.plug1.getDeviceInfo()["result"]
+            status = result["device_on"]
+            return status
+        if device_name == "p2":
+            result = self.plug2.getDeviceInfo()["result"]
+            status = result["device_on"]
+            return status
+        if device_name == "b":
+            result = self.bulb.getDeviceInfo()["result"]
+            status = result["device_on"]
+            return status
 
     def allDevicesOn(self):
         self.plug1.turnOn()
@@ -30,13 +43,28 @@ class Hardware():
         self.plug2.turnOff()
         self.bulb.turnOff()
 
-    def deviceToggle(self, deviceName):
+    def deviceToggle(self, deviceName, turnOn):
         if deviceName == "p1":
-            self.plug1.toggleState()
+            if turnOn == True:
+                self.plug1.turnOn()
+            elif turnOn == False:
+                self.plug1.turnOff()
+            else:
+                self.plug1.toggleState()
         elif deviceName == "p2":
-            self.plug2.toggleState()
+            if turnOn == True:
+                self.plug2.turnOn()
+            elif turnOn == False:
+                self.plug2.turnOff()
+            else:
+                self.plug2.toggleState()
         elif deviceName == "b":
-            self.bulb.toggleState()
+            if turnOn == True:
+                self.bulb.turnOn()
+            elif turnOn == False:
+                self.bulb.turnOff()
+            else:
+                self.bulb.toggleState()
 
     def increaseHue(self):
         try:
@@ -77,6 +105,19 @@ class Hardware():
             return "Saturation has been decreased by 10"
         except:
             return "Saturation cannot be decreased further"
+
+    def changeLightSettings(self, hue, brightness, saturation, colour_temperature):
+        try:
+            self.bulb.setColor(hue, saturation)
+            self.bulb.setBrightness(brightness)
+
+            if colour_temperature == "invalid":
+                result = self.bulb.getDeviceInfo()["result"]
+                colour_temperature = int(result["color_temp"])
+
+            self.bulb.setColorTemp(colour_temperature)
+        except:
+            return "Could not perform action"
 
     def showEnergyUsage(self):
         plug1Energy = self.plug1.getEnergyUsage()["result"]

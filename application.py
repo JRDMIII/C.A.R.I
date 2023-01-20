@@ -6,8 +6,7 @@ import time
 from tkinter import colorchooser
 import colorsys as csys
 
-import ui_creation as tui
-from ui_creation import btn
+import hardware
 import customtkinter as ct
 
 import application_database
@@ -39,6 +38,7 @@ class Application(ct.CTk):
         self.db = application_database.database()
 
         self.colour_code = ""
+        self.hardware = hardware.Hardware(self.db.get_plug1IP(), self.db.get_plug2IP(), self.db.get_bulbIP(), "damiolatunji4tj@gmail.com", "party39ta3")
 
         # This uses the database to get the value of loggedIn in tblCurrentStatus
         self.loggedIn = self.db.get_loggedInStatus()[0]
@@ -55,7 +55,11 @@ class Application(ct.CTk):
         self.resizable(False, False)
         self.title("C.A.R.I")
         self.protocol("WM_DELETE_WINDOW", self.close)
-        ct.set_default_color_theme(self.db.get_theme()[1])
+
+        try:
+            ct.set_default_color_theme(self.db.get_theme()[1])
+        except:
+            ct.set_default_color_theme("dark-blue")
 
         # This checks to see if the user has logged in and goes
         # to the appropriate screen depending on the result of the check
@@ -90,20 +94,11 @@ class Application(ct.CTk):
         self.settings_tab.grid_columnconfigure(0, weight=1)
         self.settings_tab.grid_rowconfigure(1, weight=1)
 
-        # self.logout_button = ct.CTkButton(master=self.settings_tab,
-        #                                     text="Logout",
-        #                                     font=self.title_font,
-        #                                     corner_radius=0,
-        #                                     width=self.frame_left_width,
-        #                                     height=35,
-        #                                     command=self.logout)
-        # self.logout_button.grid(row=5, column=0)
-        # This makes sure that the home page is the first thing that is shown
-
         # This is what creates the settings tab
 
         self.frame_va_settings = ct.CTkFrame(master=self.settings_tab, corner_radius=10)
         self.frame_va_settings.grid(row=1, column=0, sticky="nswe", padx=10, pady=20)
+        self.frame_va_settings.grid_columnconfigure(0, weight=0)
 
         self.frame_app_settings = ct.CTkFrame(master=self.settings_tab, corner_radius=10)
         self.frame_app_settings.grid(row=1, column=1, sticky="nswe", padx=10, pady=20)
@@ -201,6 +196,15 @@ class Application(ct.CTk):
                                                  font=self.normal_font)
         self.colour_theme_entry.grid(row=9, column=0, padx=15, pady=15, sticky="we")
 
+        self.logout_button = ct.CTkButton(master=self.frame_app_settings,
+                                          text="Logout",
+                                          font=self.title_font,
+                                          corner_radius=10,
+                                          width=self.frame_left_width,
+                                          height=35,
+                                          command=self.logout)
+        self.logout_button.grid(row=10, column=0, padx=40, pady=10, sticky="we")
+
         self.save_btn = ct.CTkButton(
             master=self.settings_tab,
             text="Save",
@@ -251,38 +255,91 @@ class Application(ct.CTk):
         self.plug1_title = ct.CTkLabel(master=self.plug1_frame, text="Plug 1 - Fan", font=self.normal_font)
         self.plug1_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
 
-        self.plug1State = "On"
+        self.plug1State = self.hardware.getDeviceStatus("p1")
 
-        self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="On")
+        self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug1)
         self.plug1_switch.grid(row=1, column=0, padx=20, pady=10, sticky="swn")
+
+        if self.plug1State == True:
+            self.plug1_switch.configure(text="On")
+            self.plug1_switch.select()
+        else:
+            self.plug1_switch.configure(text="Off")
+            self.plug1_switch.deselect()
 
         self.plug2_title = ct.CTkLabel(master=self.plug2_frame, text="Plug 2 - Desk", font=self.normal_font)
         self.plug2_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
 
-        self.plug2State = "Off"
+        self.plug2State = self.hardware.getDeviceStatus("p2")
 
-        self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="On")
+        self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug2)
         self.plug2_switch.grid(row=1, column=0, padx=10, pady=10, sticky="swn")
+
+        if self.plug2State == True:
+            self.plug2_switch.configure(text="On")
+            self.plug2_switch.select()
+        else:
+            self.plug2_switch.configure(text="Off")
+            self.plug2_switch.deselect()
 
         self.bulb_frame.grid_columnconfigure(0, weight=1)
 
         self.bulb_title = ct.CTkLabel(master=self.bulb_frame, text="Bulb", font=self.normal_font)
         self.bulb_title.grid(row=0, column=0, padx=20, pady=12, sticky="swn")
 
-        self.bulbState = "On"
+        self.bulbState = self.hardware.getDeviceStatus("b")
 
-        self.bulb_switch = ct.CTkSwitch(master=self.bulb_frame, text="On")
+        self.bulb_switch = ct.CTkSwitch(master=self.bulb_frame, text="", onvalue=1, offvalue=0, command=self.toggleBulb)
         self.bulb_switch.grid(row=0, column=1, padx=10, pady=(15, 5), sticky="wn")
+
+        if self.bulbState == True:
+            self.bulb_switch.configure(text="On")
+            self.bulb_switch.select()
+        else:
+            self.bulb_switch.configure(text="Off")
+            self.bulb_switch.deselect()
 
         self.colourTemperature_title = ct.CTkLabel(master=self.bulb_frame, text="Colour Temperature (From 1000-7000K)", font=self.normal_font)
         self.colourTemperature_title.grid(row=1, column=0, padx=20, pady=12, sticky="swn")
         self.colourTemperature_entry = ct.CTkEntry(master=self.bulb_frame,
                                         placeholder_text="e.g. 2356K",
                                         font=self.normal_font)
-        self.colourTemperature_entry.grid(row=2, column=0, padx=15, pady=15, sticky="we")
+        self.colourTemperature_entry.grid(row=2, column=0, columnspan=2, padx=15, pady=15, sticky="we")
 
         self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Select Bulb Colour", command=self.chooseColour)
-        self.selectColour_button.grid(row=3, column=0, padx=20, pady=5)
+        self.selectColour_button.grid(row=3, column=0, columnspan=2, padx=20, pady=5)
+
+        self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Save All settings",
+                                                command=self.executeLightChange)
+        self.selectColour_button.grid(row=5, column=0, columnspan=2, padx=20, pady=5)
+
+    def toggleBulb(self):
+        value = self.bulb_switch.get()
+        if value == 1:
+            self.bulb_switch.configure(text="On")
+            self.hardware.deviceToggle("b", True)
+        if value == 0:
+            self.bulb_switch.configure(text="Off")
+            self.hardware.deviceToggle("b", False)
+
+    def togglePlug1(self):
+        value = self.plug1_switch.get()
+        if value == 1:
+            self.plug1_switch.configure(text="On")
+            self.hardware.deviceToggle("p1", True)
+        if value == 0:
+            self.plug1_switch.configure(text="Off")
+            self.hardware.deviceToggle("p1", False)
+
+    def togglePlug2(self):
+        value = self.plug2_switch.get()
+        if value == 1:
+            self.plug2_switch.configure(text="On")
+            self.hardware.deviceToggle("p2", True)
+        if value == 0:
+            self.plug2_switch.configure(text="Off")
+            self.hardware.deviceToggle("p2", False)
+
 
     def chooseColour(self):
 
@@ -291,13 +348,21 @@ class Application(ct.CTk):
         r, g, b = [x/255.0 for x in self.colour_code[0]]
 
         self.colour_hsv = csys.rgb_to_hsv(r, g, b)
-        print(self.colour_hsv)
         self.colour_hsv = [self.colour_hsv[0]*360, self.colour_hsv[1]*100, self.colour_hsv[2]*100]
-        print(self.colour_hsv)
-        print(self.colour_code[0])
 
-        self.colour_preview = ct.CTkFrame(master=self.bulb_frame, fg_color=self.colour_code[1])
-        self.colour_preview.grid(row=4, column=0, padx=20, pady=5)
+        self.colour_preview = ct.CTkFrame(master=self.bulb_frame, width=300, height=300, fg_color=self.colour_code[1])
+        self.colour_preview.grid(row=4, column=0, columnspan=2, padx=20, pady=5)
+
+    def executeLightChange(self):
+        try:
+            hue, saturation, brightness = int(self.colour_hsv[0]), int(self.colour_hsv[1]), int(self.colour_hsv[2])
+        except:
+            print("No values need to be changed")
+        try:
+            colour_temperature = int(self.colourTemperature_entry.get())
+            self.hardware.changeLightSettings(hue, brightness, saturation, colour_temperature)
+        except:
+            self.hardware.changeLightSettings(hue, brightness, saturation, "invalid")
 
 
 
@@ -468,7 +533,6 @@ class Application(ct.CTk):
 
     def colourThemeCallback(self, choice):
         self.colour_theme_var.set(choice)
-        print(self.colour_theme_var.get())
 
     def create_account(self):
         firstname = self.first_name_entry.get()
