@@ -32,8 +32,10 @@ class Application(ct.CTk):
     def __init__(self):
         super().__init__()
 
+        # This initialises the database class to access the SQL database
         self.db = application_database.database()
 
+        # This uses the database to get the value of loggedIn in tblCurrentStatus
         self.loggedIn = self.db.get_loggedInStatus()[0]
 
         # Defining certain app dimensions
@@ -50,6 +52,8 @@ class Application(ct.CTk):
         self.protocol("WM_DELETE_WINDOW", self.close)
         ct.set_default_color_theme(self.db.get_theme())
 
+        # This checks to see if the user has logged in and goes
+        # to the appropriate screen depending on the result of the check
         if "No" in self.loggedIn:
             self.create_login_screen()
         else:
