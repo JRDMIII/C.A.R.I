@@ -111,13 +111,16 @@ class database():
             return "Failed"
 
     def get_theme(self):
+        uid = self.getUserID()[0]
+
         self.c.execute(f"""
         SELECT tblSettings.colourID, tblColourPresets.presetPath
         FROM tblSettings
         INNER JOIN tblColourPresets
         ON tblSettings.colourID=tblColourPresets.colourPresetID
+        WHERE userID="{uid}"
         """)
-        result = self.c.fetchone()[1]
+        result = self.c.fetchone()
         return result
 
     def set_theme(self, ID):

@@ -296,7 +296,7 @@ def process_query():
                                 hardware.deviceToggle("b")
                             elif hand_gesture == 4:
                                 hardware.allDevicesOn()
-                            elif hand_gesture == 4:
+                            elif hand_gesture == 5:
                                 hardware.allDevicesOff()
 
 if __name__ == "__main__":
