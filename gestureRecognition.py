@@ -34,7 +34,7 @@ def gestureRec():
         print(str(fingers_up))
         past.append(fingers_up)
 
-    hand_gesture = past[0]
+    hand_gesture = max(set(past), key=past.count)
     if hand_gesture == 0:
         return -1, True
     else:

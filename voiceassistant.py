@@ -269,11 +269,12 @@ def getAudio():
 def process_query():
     # This makes sure that queries will be constantly processed
     while True:
-        query = getAudio().lower()
+        # query = getAudio().lower()
+        query = "hey assistant hand gesture"
         if query == "None":
             break
         elif "assistant" in query:
-            query = query.split("and")
+            query = query.split(" and ")
             print(query)
             for request in query:
                 if "what is the date" in request:
@@ -342,11 +343,11 @@ def process_query():
                         while hand_gesture == -1:
                             hand_gesture, not_found = gr.gestureRec()
                             if hand_gesture == 1:
-                                hardware.deviceToggle("p1")
+                                hardware.deviceToggle("p1", "toggle")
                             elif hand_gesture == 2:
-                                hardware.deviceToggle("p2")
+                                hardware.deviceToggle("p2", "toggle")
                             elif hand_gesture == 3:
-                                hardware.deviceToggle("b")
+                                hardware.deviceToggle("b", "toggle")
                             elif hand_gesture == 4:
                                 hardware.allDevicesOn()
                             elif hand_gesture == 5:
