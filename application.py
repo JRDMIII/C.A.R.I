@@ -266,7 +266,8 @@ class Application(ct.CTk):
 
             self.plug1State = self.hardware.getDeviceStatus("p1")
 
-            self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug1)
+            self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="", onvalue=1, offvalue=0,
+                                             command=self.togglePlug1)
             self.plug1_switch.grid(row=1, column=0, padx=20, pady=10, sticky="swn")
 
             if self.plug1State == True:
@@ -281,7 +282,8 @@ class Application(ct.CTk):
 
             self.plug2State = self.hardware.getDeviceStatus("p2")
 
-            self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug2)
+            self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="", onvalue=1, offvalue=0,
+                                             command=self.togglePlug2)
             self.plug2_switch.grid(row=1, column=0, padx=10, pady=10, sticky="swn")
 
             if self.plug2State == True:
@@ -298,7 +300,8 @@ class Application(ct.CTk):
 
             self.bulbState = self.hardware.getDeviceStatus("b")
 
-            self.bulb_switch = ct.CTkSwitch(master=self.bulb_frame, text="", onvalue=1, offvalue=0, command=self.toggleBulb)
+            self.bulb_switch = ct.CTkSwitch(master=self.bulb_frame, text="", onvalue=1, offvalue=0,
+                                            command=self.toggleBulb)
             self.bulb_switch.grid(row=0, column=1, padx=10, pady=(15, 5), sticky="wn")
 
             if self.bulbState == True:
@@ -308,19 +311,22 @@ class Application(ct.CTk):
                 self.bulb_switch.configure(text="Off")
                 self.bulb_switch.deselect()
 
-            self.colourTemperature_title = ct.CTkLabel(master=self.bulb_frame, text="Colour Temperature (From 1000-7000K)", font=self.normal_font)
+            self.colourTemperature_title = ct.CTkLabel(master=self.bulb_frame,
+                                                       text="Colour Temperature (From 2500-6000K)",
+                                                       font=self.normal_font)
             self.colourTemperature_title.grid(row=1, column=0, padx=20, pady=12, sticky="swn")
             self.colourTemperature_entry = ct.CTkEntry(master=self.bulb_frame,
-                                            placeholder_text="e.g. 2356K",
+                                            placeholder_text="e.g. 2356",
                                             font=self.normal_font)
             self.colourTemperature_entry.grid(row=2, column=0, columnspan=2, padx=15, pady=15, sticky="we")
 
-            self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Select Bulb Colour", command=self.chooseColour)
+            self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Select Bulb Colour",
+                                                    command=self.chooseColour)
             self.selectColour_button.grid(row=3, column=0, columnspan=2, padx=20, pady=5)
 
-            self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Save All settings",
+            self.setColour_button = ct.CTkButton(master=self.bulb_frame, text="Save All settings",
                                                     command=self.executeLightChange)
-            self.selectColour_button.grid(row=5, column=0, columnspan=2, padx=20, pady=5)
+            self.setColour_button.grid(row=5, column=0, columnspan=2, padx=20, pady=5)
         except Exception as e:
             print(e)
 
@@ -377,7 +383,6 @@ class Application(ct.CTk):
 
 
     def chooseColour(self):
-
         self.colour_code = colorchooser.askcolor(title="Select Colour")
 
         r, g, b = [x/255.0 for x in self.colour_code[0]]
@@ -385,20 +390,33 @@ class Application(ct.CTk):
         self.colour_hsv = csys.rgb_to_hsv(r, g, b)
         self.colour_hsv = [self.colour_hsv[0]*360, self.colour_hsv[1]*100, self.colour_hsv[2]*100]
 
-        self.colour_preview = ct.CTkFrame(master=self.bulb_frame, width=300, height=300, fg_color=self.colour_code[1])
+        self.colour_preview = ct.CTkFrame(master=self.bulb_frame, width=300, height=250, fg_color=self.colour_code[1])
         self.colour_preview.grid(row=4, column=0, columnspan=2, padx=20, pady=5)
 
     def executeLightChange(self):
         try:
             hue, saturation, brightness = int(self.colour_hsv[0]), int(self.colour_hsv[1]), int(self.colour_hsv[2])
         except:
-            print("No values need to be changed")
+            retry_thread = threading.Thread(target=self.show_light_error_msg)
+            retry_thread.start()
+
         try:
             colour_temperature = int(self.colourTemperature_entry.get())
-            self.hardware.changeLightSettings(hue, brightness, saturation, colour_temperature)
+            if colour_temperature <= 6000 and colour_temperature >= 2500:
+                self.hardware.changeLightSettings(hue, brightness, saturation, colour_temperature)
+            else:
+                retry_thread = threading.Thread(target=self.show_light_error_msg)
+                retry_thread.start()
         except:
             self.hardware.changeLightSettings(hue, brightness, saturation, "invalid")
 
+    def show_light_error_msg(self):
+        print("Running error msg")
+        self.error_message = ct.CTkLabel(master=self.bulb_frame,
+                                         text="Invalid entry / Not all fields have been filled")
+        self.error_message.grid(row=6, column=0, pady=5, sticky="we", columnspan=2)
+        time.sleep(3)
+        self.error_message.destroy()
 
     def create_login_screen(self):
         # ==== Here we are creating the frames which the app will be in ==== #
