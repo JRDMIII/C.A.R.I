@@ -1,5 +1,6 @@
 # This is the module that will be used to create the UI
 import sqlite3
+import threading
 import tkinter
 import time
 
@@ -76,6 +77,11 @@ class Application(ct.CTk):
         for child in self.winfo_children():
             child.destroy()
 
+        self.hardware = hardware.Hardware(self.db.get_plug1IP(), self.db.get_plug2IP(), self.db.get_bulbIP(),
+                                          "damiolatunji4tj@gmail.com", "party39ta3")
+
+        print("Logged in as {0}".format(self.db.getUserID()[0]))
+
         ct.set_default_color_theme(self.db.get_theme()[1])
 
         self.grid_columnconfigure(0, weight=0)
@@ -96,6 +102,7 @@ class Application(ct.CTk):
 
         # This is what creates the settings tab
 
+        # This sets up both of the frames which are included in the settings tab
         self.frame_va_settings = ct.CTkFrame(master=self.settings_tab, corner_radius=10)
         self.frame_va_settings.grid(row=1, column=0, sticky="nswe", padx=10, pady=20)
         self.frame_va_settings.grid_columnconfigure(0, weight=0)
@@ -188,6 +195,7 @@ class Application(ct.CTk):
                                               text="App Colour Theme",
                                               font=self.normal_font)
         self.colour_theme_title.grid(row=8, column=0, padx=15, pady=0, sticky="w")
+
         self.colour_theme_var = ct.StringVar(value=(self.db.get_theme()[1]).replace("-", " "))
         self.colour_theme_entry = ct.CTkComboBox(master=self.frame_app_settings,
                                                  values=["dark blue", "green", "blue"],
@@ -223,95 +231,122 @@ class Application(ct.CTk):
 
         # This defines what the devices tab will look like
 
-        self.devices_tab.grid_columnconfigure(0, weight=1)
-        self.devices_tab.grid_columnconfigure(1, weight=1)
-        self.devices_tab.grid_rowconfigure(0, weight=1)
-        self.devices_tab.grid_rowconfigure(1, weight=1)
-        self.devices_tab.grid_rowconfigure(2, weight=10)
-        self.devices_tab.grid_rowconfigure(3, weight=10)
+        try:
+            self.devices_tab.grid_columnconfigure(0, weight=1)
+            self.devices_tab.grid_columnconfigure(1, weight=1)
+            self.devices_tab.grid_rowconfigure(0, weight=1)
+            self.devices_tab.grid_rowconfigure(1, weight=1)
+            self.devices_tab.grid_rowconfigure(2, weight=10)
+            self.devices_tab.grid_rowconfigure(3, weight=10)
 
-        # This creates the title for the software
-        self.devices_title = ct.CTkLabel(master=self.devices_tab,
-                                      text="Devices",
-                                      font=self.title_font,
-                                      text_color="white")
-        self.devices_title.grid(row=0, column=0, padx=20, pady=5, sticky="wn")
+            # This creates the title for the software
+            self.devices_title = ct.CTkLabel(master=self.devices_tab,
+                                          text="Devices",
+                                          font=self.title_font,
+                                          text_color="white")
+            self.devices_title.grid(row=0, column=0, padx=20, pady=5, sticky="wn")
 
-        self.plug1_frame = ct.CTkFrame(master=self.devices_tab)
-        self.plug1_frame.grid(row=1, column=0, padx=10, pady=10, sticky="sewn")
-        self.plug1_frame.grid_rowconfigure(0, weight=1)
-        self.plug1_frame.grid_rowconfigure(1, weight=1)
-        self.plug1_frame.grid_columnconfigure(0, weight=1)
+            self.plug1_frame = ct.CTkFrame(master=self.devices_tab)
+            self.plug1_frame.grid(row=1, column=0, padx=10, pady=10, sticky="sewn")
+            self.plug1_frame.grid_rowconfigure(0, weight=1)
+            self.plug1_frame.grid_rowconfigure(1, weight=1)
+            self.plug1_frame.grid_columnconfigure(0, weight=1)
 
-        self.plug2_frame = ct.CTkFrame(master=self.devices_tab)
-        self.plug2_frame.grid(row=1, column=1, padx=10, pady=10, sticky="sewn")
-        self.plug2_frame.grid_rowconfigure(0, weight=1)
-        self.plug2_frame.grid_rowconfigure(1, weight=1)
-        self.plug2_frame.grid_columnconfigure(0, weight=1)
+            self.plug2_frame = ct.CTkFrame(master=self.devices_tab)
+            self.plug2_frame.grid(row=1, column=1, padx=10, pady=10, sticky="sewn")
+            self.plug2_frame.grid_rowconfigure(0, weight=1)
+            self.plug2_frame.grid_rowconfigure(1, weight=1)
+            self.plug2_frame.grid_columnconfigure(0, weight=1)
 
-        self.bulb_frame = ct.CTkFrame(master=self.devices_tab)
-        self.bulb_frame.grid(row=2, rowspan=2, column=0, columnspan=2, padx=10, pady=10, sticky="sewn")
+            self.bulb_frame = ct.CTkFrame(master=self.devices_tab)
+            self.bulb_frame.grid(row=2, rowspan=2, column=0, columnspan=2, padx=10, pady=10, sticky="sewn")
 
-        self.plug1_title = ct.CTkLabel(master=self.plug1_frame, text="Plug 1 - Fan", font=self.normal_font)
-        self.plug1_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
+            self.plug1_title = ct.CTkLabel(master=self.plug1_frame, text="Plug 1 - Fan", font=self.normal_font)
+            self.plug1_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
 
-        self.plug1State = self.hardware.getDeviceStatus("p1")
+            self.plug1State = self.hardware.getDeviceStatus("p1")
 
-        self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug1)
-        self.plug1_switch.grid(row=1, column=0, padx=20, pady=10, sticky="swn")
+            self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug1)
+            self.plug1_switch.grid(row=1, column=0, padx=20, pady=10, sticky="swn")
 
-        if self.plug1State == True:
-            self.plug1_switch.configure(text="On")
-            self.plug1_switch.select()
-        else:
-            self.plug1_switch.configure(text="Off")
-            self.plug1_switch.deselect()
+            if self.plug1State == True:
+                self.plug1_switch.configure(text="On")
+                self.plug1_switch.select()
+            else:
+                self.plug1_switch.configure(text="Off")
+                self.plug1_switch.deselect()
 
-        self.plug2_title = ct.CTkLabel(master=self.plug2_frame, text="Plug 2 - Desk", font=self.normal_font)
-        self.plug2_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
+            self.plug2_title = ct.CTkLabel(master=self.plug2_frame, text="Plug 2 - Desk", font=self.normal_font)
+            self.plug2_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
 
-        self.plug2State = self.hardware.getDeviceStatus("p2")
+            self.plug2State = self.hardware.getDeviceStatus("p2")
 
-        self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug2)
-        self.plug2_switch.grid(row=1, column=0, padx=10, pady=10, sticky="swn")
+            self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="", onvalue=1, offvalue=0, command=self.togglePlug2)
+            self.plug2_switch.grid(row=1, column=0, padx=10, pady=10, sticky="swn")
 
-        if self.plug2State == True:
-            self.plug2_switch.configure(text="On")
-            self.plug2_switch.select()
-        else:
-            self.plug2_switch.configure(text="Off")
-            self.plug2_switch.deselect()
+            if self.plug2State == True:
+                self.plug2_switch.configure(text="On")
+                self.plug2_switch.select()
+            else:
+                self.plug2_switch.configure(text="Off")
+                self.plug2_switch.deselect()
 
-        self.bulb_frame.grid_columnconfigure(0, weight=1)
+            self.bulb_frame.grid_columnconfigure(0, weight=1)
 
-        self.bulb_title = ct.CTkLabel(master=self.bulb_frame, text="Bulb", font=self.normal_font)
-        self.bulb_title.grid(row=0, column=0, padx=20, pady=12, sticky="swn")
+            self.bulb_title = ct.CTkLabel(master=self.bulb_frame, text="Bulb", font=self.normal_font)
+            self.bulb_title.grid(row=0, column=0, padx=20, pady=12, sticky="swn")
 
-        self.bulbState = self.hardware.getDeviceStatus("b")
+            self.bulbState = self.hardware.getDeviceStatus("b")
 
-        self.bulb_switch = ct.CTkSwitch(master=self.bulb_frame, text="", onvalue=1, offvalue=0, command=self.toggleBulb)
-        self.bulb_switch.grid(row=0, column=1, padx=10, pady=(15, 5), sticky="wn")
+            self.bulb_switch = ct.CTkSwitch(master=self.bulb_frame, text="", onvalue=1, offvalue=0, command=self.toggleBulb)
+            self.bulb_switch.grid(row=0, column=1, padx=10, pady=(15, 5), sticky="wn")
 
-        if self.bulbState == True:
-            self.bulb_switch.configure(text="On")
-            self.bulb_switch.select()
-        else:
-            self.bulb_switch.configure(text="Off")
-            self.bulb_switch.deselect()
+            if self.bulbState == True:
+                self.bulb_switch.configure(text="On")
+                self.bulb_switch.select()
+            else:
+                self.bulb_switch.configure(text="Off")
+                self.bulb_switch.deselect()
 
-        self.colourTemperature_title = ct.CTkLabel(master=self.bulb_frame, text="Colour Temperature (From 1000-7000K)", font=self.normal_font)
-        self.colourTemperature_title.grid(row=1, column=0, padx=20, pady=12, sticky="swn")
-        self.colourTemperature_entry = ct.CTkEntry(master=self.bulb_frame,
-                                        placeholder_text="e.g. 2356K",
-                                        font=self.normal_font)
-        self.colourTemperature_entry.grid(row=2, column=0, columnspan=2, padx=15, pady=15, sticky="we")
+            self.colourTemperature_title = ct.CTkLabel(master=self.bulb_frame, text="Colour Temperature (From 1000-7000K)", font=self.normal_font)
+            self.colourTemperature_title.grid(row=1, column=0, padx=20, pady=12, sticky="swn")
+            self.colourTemperature_entry = ct.CTkEntry(master=self.bulb_frame,
+                                            placeholder_text="e.g. 2356K",
+                                            font=self.normal_font)
+            self.colourTemperature_entry.grid(row=2, column=0, columnspan=2, padx=15, pady=15, sticky="we")
 
-        self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Select Bulb Colour", command=self.chooseColour)
-        self.selectColour_button.grid(row=3, column=0, columnspan=2, padx=20, pady=5)
+            self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Select Bulb Colour", command=self.chooseColour)
+            self.selectColour_button.grid(row=3, column=0, columnspan=2, padx=20, pady=5)
 
-        self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Save All settings",
-                                                command=self.executeLightChange)
-        self.selectColour_button.grid(row=5, column=0, columnspan=2, padx=20, pady=5)
+            self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Save All settings",
+                                                    command=self.executeLightChange)
+            self.selectColour_button.grid(row=5, column=0, columnspan=2, padx=20, pady=5)
+        except Exception as e:
+            print(e)
+
+            for child in self.devices_tab.winfo_children():
+                child.destroy()
+
+            self.devices_tab.grid_columnconfigure(0, weight=1)
+            self.devices_tab.grid_columnconfigure(1, weight=0)
+            self.devices_tab.grid_rowconfigure(0, weight=1)
+            self.devices_tab.grid_rowconfigure(1, weight=0)
+            self.devices_tab.grid_rowconfigure(2, weight=0)
+            self.devices_tab.grid_rowconfigure(3, weight=0)
+
+            self.unavailable_frame = ct.CTkFrame(master=self.devices_tab, corner_radius=5)
+            self.unavailable_frame.grid(row=0, column=0, sticky="nswe", padx=10, pady=10)
+
+            self.unavailable_frame.grid_columnconfigure(0, weight=1)
+
+            self.unavailable_title = ct.CTkLabel(master=self.unavailable_frame,
+                                                 text="Devices Unavailable",
+                                                 font=self.title_font)
+            self.unavailable_title.grid(row=0, column=0, sticky="nswe", pady=5)
+            self.unavailable_text = ct.CTkLabel(master=self.unavailable_frame,
+                                                 text="Please Input All Device IPs into the settings tab then restart the application",
+                                                 font=self.normal_font)
+            self.unavailable_text.grid(row=1, column=0, sticky="nswe")
 
     def toggleBulb(self):
         value = self.bulb_switch.get()
@@ -365,12 +400,13 @@ class Application(ct.CTk):
             self.hardware.changeLightSettings(hue, brightness, saturation, "invalid")
 
 
-
-
     def create_login_screen(self):
         # ==== Here we are creating the frames which the app will be in ==== #
         for child in self.winfo_children():
             child.destroy()
+
+        self.settings_tab.destroy()
+        self.devices_tab.destroy()
 
         self.grid_columnconfigure(1, weight=0)
         self.grid_rowconfigure(0, weight=0)
@@ -531,6 +567,21 @@ class Application(ct.CTk):
             pady=10
         )
 
+        self.back_btn = ct.CTkButton(
+            master=self.main_frame,
+            text="Back",
+            width=120,
+            corner_radius=10,
+            command=self.login_screen
+        )
+        self.back_btn.grid(
+            column=0,
+            row=0,
+            padx=10,
+            pady=10,
+            sticky="w"
+        )
+
     def colourThemeCallback(self, choice):
         self.colour_theme_var.set(choice)
 
@@ -540,9 +591,20 @@ class Application(ct.CTk):
         email = self.email_entry.get()
         password = self.password_entry.get()
 
-        self.db.register(email, password, firstname, lastname)
+        if firstname == "" or lastname == "" or email == "" or password == "":
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+        else:
+            self.db.register(email, password, firstname, lastname)
+            self.create_main_screen()
 
-        self.create_main_screen()
+    def show_register_error_msg(self):
+        self.error_message = ct.CTkLabel(master=self.main_frame,
+                                         text="All fields must be filled")
+        self.error_message.grid(row=9, column=0)
+        time.sleep(3)
+        self.error_message.destroy()
+
 
     def logout(self):
         self.db.logout()
@@ -558,7 +620,15 @@ class Application(ct.CTk):
         if return_code[0] == True:
             self.create_main_screen()
         else:
-            print("Retry")
+            retry_thread = threading.Thread(target=self.show_login_error_msg)
+            retry_thread.start()
+
+    def show_login_error_msg(self):
+        self.error_message = ct.CTkLabel(master=self.main_frame,
+                                         text="Invalid Email or Password Doesnt Match")
+        self.error_message.grid(row=9, column=0)
+        time.sleep(3)
+        self.error_message.destroy()
 
     # This will define what happens when the exit button is pressed
     def close(self, event=0):
@@ -577,7 +647,8 @@ class Application(ct.CTk):
         self.db.set_time_format(time_format)
 
         name = self.name_entry.get()
-        self.db.set_name(name)
+        if name != "":
+            self.db.set_name(name)
 
         plug1IP = self.plug1IP_entry.get()
 

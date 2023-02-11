@@ -47,24 +47,33 @@ class Hardware():
         if deviceName == "p1":
             if turnOn == True:
                 self.plug1.turnOn()
+                print("Plug 1 has been turned on")
             elif turnOn == False:
                 self.plug1.turnOff()
+                print("Plug 1 has been turned off")
             else:
                 self.plug1.toggleState()
+                print("Plug 2 has been toggled")
         elif deviceName == "p2":
             if turnOn == True:
                 self.plug2.turnOn()
+                print("Plug 2 has been turned on")
             elif turnOn == False:
                 self.plug2.turnOff()
+                print("Plug 2 has been turned off")
             else:
                 self.plug2.toggleState()
+                print("Plug 1 has been toggled")
         elif deviceName == "b":
             if turnOn == True:
                 self.bulb.turnOn()
+                print("Bulb has been turned on")
             elif turnOn == False:
                 self.bulb.turnOff()
+                print("Bulb has been turned off")
             else:
                 self.bulb.toggleState()
+                print("Bulb has been toggled")
 
     def increaseHue(self):
         try:
@@ -116,6 +125,7 @@ class Hardware():
                 colour_temperature = int(result["color_temp"])
 
             self.bulb.setColorTemp(colour_temperature)
+            print("The colours have been changed")
         except:
             return "Could not perform action"
 

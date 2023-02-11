@@ -22,15 +22,16 @@ class database():
         return result
 
     def set_email(self, email):
+        uid = self.getUserID()[0]
         self.c.execute(f"""
         UPDATE tblAccounts
-        SET email='{email}';
+        SET email='{email}'
+        WHERE userID="{uid}";
     """)
         self.conn.commit()
 
     def get_plug1IP(self):
         uid = self.getUserID()[0]
-
         self.c.execute(f"""SELECT plugOneIP FROM tblSettings
         WHERE userID="{uid}"
         """)
@@ -42,8 +43,6 @@ class database():
 
     def set_plug1IP(self, IP):
         uid = self.getUserID()[0]
-        
-
         try:
             self.c.execute(f"""
             UPDATE tblSettings
@@ -57,8 +56,6 @@ class database():
 
     def get_plug2IP(self):
         uid = self.getUserID()[0]
-        
-
         self.c.execute(f"""SELECT plugTwoIP FROM tblSettings
         WHERE userID="{uid}"
         """)
@@ -70,8 +67,6 @@ class database():
 
     def set_plug2IP(self, IP):
         uid = self.getUserID()[0]
-        
-
         try:
             self.c.execute(f"""
             UPDATE tblSettings
@@ -85,7 +80,6 @@ class database():
 
     def get_bulbIP(self):
         uid = self.getUserID()[0]
-
         self.c.execute(f"""SELECT bulbIP FROM tblSettings
         WHERE userID="{uid}"
         """)
@@ -97,8 +91,6 @@ class database():
 
     def set_bulbIP(self, IP):
         uid = self.getUserID()[0]
-        
-
         try:
             self.c.execute(f"""
             UPDATE tblSettings
@@ -164,13 +156,20 @@ class database():
 
     # === These are the setters and getters for the date format element === #
     def get_time_format(self):
-        self.c.execute("SELECT time_format FROM tblSettings")
+        uid = self.getUserID()[0]
+        self.c.execute(f"""
+        SELECT time_format 
+        FROM tblSettings 
+        WHERE userID="{uid}";
+        """)
         return self.c.fetchone()
 
     def set_time_format(self, format):
+        uid = self.getUserID()[0]
         self.c.execute(f"""
         UPDATE tblSettings
-        SET time_format='{format}';
+        SET time_format='{format}'
+        WHERE userID="{uid}";
     """)
         self.conn.commit()
 
