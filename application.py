@@ -3,6 +3,7 @@ import sqlite3
 import threading
 import tkinter
 import time
+import re
 
 from tkinter import colorchooser
 import colorsys as csys
@@ -77,36 +78,43 @@ class Application(ct.CTk):
         for child in self.winfo_children():
             child.destroy()
 
+        # Re-initialising the hardware object using the information of the newly logged in user
         self.hardware = hardware.Hardware(self.db.get_plug1IP(), self.db.get_plug2IP(), self.db.get_bulbIP(),
                                           "damiolatunji4tj@gmail.com", "party39ta3")
 
+        # Debug statement to make sure the correct person has logged in
         print("Logged in as {0}".format(self.db.getUserID()[0]))
 
+        # Setting the colour theme to the user's desired colour scheme in the settings menu
         ct.set_default_color_theme(self.db.get_theme()[1])
 
+        # Configuring the rows and columns of the application for the frames to be added
         self.grid_columnconfigure(0, weight=0)
         self.grid_rowconfigure(0, weight=0)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.frame_right = ct.CTkTabview(master=self, corner_radius=0)
-        self.frame_right.grid(row=0, column=0, sticky="nswe", padx=20, pady=20)
+        # Creating the frame which will include all the objects
+        self.application_frame = ct.CTkTabview(master=self, corner_radius=0)
+        self.application_frame.grid(row=0, column=0, sticky="nswe", padx=20, pady=20)
 
-        self.devices_tab = self.frame_right.add("Devices")
-        self.settings_tab = self.frame_right.add("Settings")
+        # Creating the two tabs that wil be included in the main application screen
+        self.devices_tab = self.application_frame.add("Devices")
+        self.settings_tab = self.application_frame.add("Settings")
 
+        # This is what creates the settings tab
+        # Configuring the columns and rows of the settings tab to match the design
         self.settings_tab.grid_columnconfigure(1, weight=1)
         self.settings_tab.grid_columnconfigure(0, weight=1)
         self.settings_tab.grid_rowconfigure(1, weight=1)
-
-        # This is what creates the settings tab
 
         # This sets up both of the frames which are included in the settings tab
         self.frame_va_settings = ct.CTkFrame(master=self.settings_tab, corner_radius=10)
         self.frame_va_settings.grid(row=1, column=0, sticky="nswe", padx=10, pady=20)
         self.frame_va_settings.grid_columnconfigure(0, weight=0)
 
+        # Creating the column for all settings relating to the application
         self.frame_app_settings = ct.CTkFrame(master=self.settings_tab, corner_radius=10)
         self.frame_app_settings.grid(row=1, column=1, sticky="nswe", padx=10, pady=20)
 
@@ -128,7 +136,7 @@ class Application(ct.CTk):
         self.app_settings_title.grid(row=1, column=0, columnspan=1, padx=15, pady=10)
 
         # Creating the time format setting
-
+        # Getting the user's current time format from the database
         time_format = str(self.db.get_time_format()[0])
         self.format = time_format + "-Hour Format"
 
@@ -140,7 +148,7 @@ class Application(ct.CTk):
                                           offvalue="12"
                                           )
         self.format_switch.grid(row=2, column=0, padx=10, pady=20, sticky="w")
-
+         # Checks what the time format currently is in settings and switches the switch on if it's 24
         if time_format == "24":
             self.format_switch.toggle()
 
@@ -150,36 +158,44 @@ class Application(ct.CTk):
                                       font=self.normal_font)
         self.name_title.grid(row=4, column=0, padx=15, pady=0, sticky="w")
 
+        # Getting the users name from the database
         name = str(self.db.get_name())
 
+        # Creating an entry box with the users name as placeholder text
         self.name_entry = ct.CTkEntry(master=self.frame_va_settings,
                                       placeholder_text=name,
                                       font=self.normal_font)
         self.name_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
 
         # Creating the plug1IP setting
+        # Adding and placing the title for the IP address
         self.plug1IP_title = ct.CTkLabel(master=self.frame_app_settings,
                                          text="Plug 1's IP Address",
                                          font=self.normal_font)
         self.plug1IP_title.grid(row=2, column=0, padx=15, pady=0, sticky="w")
+
+        # Getting the current IP address for the plug held in the settings database
         plug1IP = self.db.get_plug1IP()
         self.plug1IP_entry = ct.CTkEntry(master=self.frame_app_settings,
                                          placeholder_text=plug1IP,
                                          font=self.normal_font)
         self.plug1IP_entry.grid(row=3, column=0, padx=15, pady=15, sticky="we")
 
-        # Creating the plug1IP setting
+        # Creating the second plug IP setting
+        # Adding and placing the title for the IP address
         self.plug2IP_title = ct.CTkLabel(master=self.frame_app_settings,
                                          text="Plug 2's IP Address",
                                          font=self.normal_font)
         self.plug2IP_title.grid(row=4, column=0, padx=15, pady=0, sticky="w")
+
+        # Getting the current IP address for the plug held in the settings database
         plug2IP = self.db.get_plug2IP()
         self.plug2IP_entry = ct.CTkEntry(master=self.frame_app_settings,
                                          placeholder_text=plug2IP,
                                          font=self.normal_font)
         self.plug2IP_entry.grid(row=5, column=0, padx=15, pady=15, sticky="we")
 
-        # Creating the plug1IP setting
+        # Creating the bulb IP setting
         self.bulbIP_title = ct.CTkLabel(master=self.frame_app_settings,
                                         text="Bulb's IP Address",
                                         font=self.normal_font)
@@ -190,12 +206,13 @@ class Application(ct.CTk):
                                         font=self.normal_font)
         self.bulbIP_entry.grid(row=7, column=0, padx=15, pady=15, sticky="we")
 
-        # Creating the name setting
+        # Creating the colour theme drop down
         self.colour_theme_title = ct.CTkLabel(master=self.frame_app_settings,
                                               text="App Colour Theme",
                                               font=self.normal_font)
         self.colour_theme_title.grid(row=8, column=0, padx=15, pady=0, sticky="w")
 
+        # Creating a variable which will be used to store the current colour theme
         self.colour_theme_var = ct.StringVar(value=(self.db.get_theme()[1]).replace("-", " "))
         self.colour_theme_entry = ct.CTkComboBox(master=self.frame_app_settings,
                                                  values=["dark blue", "green", "blue"],
@@ -204,6 +221,7 @@ class Application(ct.CTk):
                                                  font=self.normal_font)
         self.colour_theme_entry.grid(row=9, column=0, padx=15, pady=15, sticky="we")
 
+        # This button allows users to logout through the settings menu
         self.logout_button = ct.CTkButton(master=self.frame_app_settings,
                                           text="Logout",
                                           font=self.title_font,
@@ -213,6 +231,7 @@ class Application(ct.CTk):
                                           command=self.logout)
         self.logout_button.grid(row=10, column=0, padx=40, pady=10, sticky="we")
 
+        # Creating a button which will activate the save function when pressed
         self.save_btn = ct.CTkButton(
             master=self.settings_tab,
             text="Save",
@@ -229,9 +248,10 @@ class Application(ct.CTk):
             sticky="we"
         )
 
-        # This defines what the devices tab will look like
 
+        # A try except statement is used to show users without valid devices a different screen
         try:
+            # This defines what the devices tab will look like
             self.devices_tab.grid_columnconfigure(0, weight=1)
             self.devices_tab.grid_columnconfigure(1, weight=1)
             self.devices_tab.grid_rowconfigure(0, weight=1)
@@ -246,30 +266,36 @@ class Application(ct.CTk):
                                           text_color="white")
             self.devices_title.grid(row=0, column=0, padx=20, pady=5, sticky="wn")
 
+            # Creating and configuring a frame for the first plug
             self.plug1_frame = ct.CTkFrame(master=self.devices_tab)
             self.plug1_frame.grid(row=1, column=0, padx=10, pady=10, sticky="sewn")
             self.plug1_frame.grid_rowconfigure(0, weight=1)
             self.plug1_frame.grid_rowconfigure(1, weight=1)
             self.plug1_frame.grid_columnconfigure(0, weight=1)
 
+            # Creating and configuring a frame for the second plug
             self.plug2_frame = ct.CTkFrame(master=self.devices_tab)
             self.plug2_frame.grid(row=1, column=1, padx=10, pady=10, sticky="sewn")
             self.plug2_frame.grid_rowconfigure(0, weight=1)
             self.plug2_frame.grid_rowconfigure(1, weight=1)
             self.plug2_frame.grid_columnconfigure(0, weight=1)
 
+            # Creating and configuring a frame for the light bulb
             self.bulb_frame = ct.CTkFrame(master=self.devices_tab)
             self.bulb_frame.grid(row=2, rowspan=2, column=0, columnspan=2, padx=10, pady=10, sticky="sewn")
 
+            # Creating a title to say what the first plug controls
             self.plug1_title = ct.CTkLabel(master=self.plug1_frame, text="Plug 1 - Fan", font=self.normal_font)
             self.plug1_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
 
+            # Gets the state of the plug so that the switch can be toggled to show the correct state
             self.plug1State = self.hardware.getDeviceStatus("p1")
 
             self.plug1_switch = ct.CTkSwitch(master=self.plug1_frame, text="", onvalue=1, offvalue=0,
                                              command=self.togglePlug1)
             self.plug1_switch.grid(row=1, column=0, padx=20, pady=10, sticky="swn")
 
+            # Changing the switch text and the state dependent on the value of plug1State
             if self.plug1State == True:
                 self.plug1_switch.configure(text="On")
                 self.plug1_switch.select()
@@ -277,15 +303,18 @@ class Application(ct.CTk):
                 self.plug1_switch.configure(text="Off")
                 self.plug1_switch.deselect()
 
+            # Creating a title to say what the second plug controls
             self.plug2_title = ct.CTkLabel(master=self.plug2_frame, text="Plug 2 - Desk", font=self.normal_font)
             self.plug2_title.grid(row=0, column=0, padx=10, pady=10, sticky="swn")
 
+            # Gets the state of the plug so that the switch can be toggled to show the correct state
             self.plug2State = self.hardware.getDeviceStatus("p2")
 
             self.plug2_switch = ct.CTkSwitch(master=self.plug2_frame, text="", onvalue=1, offvalue=0,
                                              command=self.togglePlug2)
             self.plug2_switch.grid(row=1, column=0, padx=10, pady=10, sticky="swn")
 
+            # Changing the switch text and the state dependent on the value of plug1State
             if self.plug2State == True:
                 self.plug2_switch.configure(text="On")
                 self.plug2_switch.select()
@@ -295,6 +324,9 @@ class Application(ct.CTk):
 
             self.bulb_frame.grid_columnconfigure(0, weight=1)
 
+            # Same is then done for the bulb as the other plugs
+            # The title is created
+            # The current state of the lightbulb is retrieved and the switch is set to show that state
             self.bulb_title = ct.CTkLabel(master=self.bulb_frame, text="Bulb", font=self.normal_font)
             self.bulb_title.grid(row=0, column=0, padx=20, pady=12, sticky="swn")
 
@@ -311,24 +343,38 @@ class Application(ct.CTk):
                 self.bulb_switch.configure(text="Off")
                 self.bulb_switch.deselect()
 
+
+            # Creating a title for the colour temperature entry
+            # Title includes the range of values which are allowed for the colour temperature
             self.colourTemperature_title = ct.CTkLabel(master=self.bulb_frame,
                                                        text="Colour Temperature (From 2500-6000K)",
                                                        font=self.normal_font)
             self.colourTemperature_title.grid(row=1, column=0, padx=20, pady=12, sticky="swn")
+
+            # Creating the colour temperature entry
             self.colourTemperature_entry = ct.CTkEntry(master=self.bulb_frame,
                                             placeholder_text="e.g. 2356",
                                             font=self.normal_font)
             self.colourTemperature_entry.grid(row=2, column=0, columnspan=2, padx=15, pady=15, sticky="we")
 
+            # Creating the button that will open the colour picker window
             self.selectColour_button = ct.CTkButton(master=self.bulb_frame, text="Select Bulb Colour",
                                                     command=self.chooseColour)
             self.selectColour_button.grid(row=3, column=0, columnspan=2, padx=20, pady=5)
 
+            # This creates the button which will execute the light colour change asked for by the user
+
             self.setColour_button = ct.CTkButton(master=self.bulb_frame, text="Save All settings",
                                                     command=self.executeLightChange)
             self.setColour_button.grid(row=5, column=0, columnspan=2, padx=20, pady=5)
+
+            # Creating the button that will open the colour picker window
+            self.rgb_button = ct.CTkButton(master=self.bulb_frame, text="RGB!",
+                                                    command=self.hardware.start_rgb)
+            self.rgb_button.grid(row=7, column=0, columnspan=2, padx=20, pady=5)
+
         except Exception as e:
-            print(e)
+            # If the user hasn't entered IP addresses for all of their devices then it will show this instead
 
             for child in self.devices_tab.winfo_children():
                 child.destroy()
@@ -340,6 +386,8 @@ class Application(ct.CTk):
             self.devices_tab.grid_rowconfigure(2, weight=0)
             self.devices_tab.grid_rowconfigure(3, weight=0)
 
+            # Creating a frame with text in it to say that devices are unavailable until the IP addresses have been
+            # added to the settings and the application has been restarted
             self.unavailable_frame = ct.CTkFrame(master=self.devices_tab, corner_radius=5)
             self.unavailable_frame.grid(row=0, column=0, sticky="nswe", padx=10, pady=10)
 
@@ -355,6 +403,8 @@ class Application(ct.CTk):
             self.unavailable_text.grid(row=1, column=0, sticky="nswe")
 
     def toggleBulb(self):
+        # Used to toggle the text for the switch in the devices tab
+        # Also toggles the state of the bulb
         value = self.bulb_switch.get()
         if value == 1:
             self.bulb_switch.configure(text="On")
@@ -364,6 +414,8 @@ class Application(ct.CTk):
             self.hardware.deviceToggle("b", False)
 
     def togglePlug1(self):
+        # Used to toggle the text for the switch in the devices tab
+        # Also toggles the state of the plug
         value = self.plug1_switch.get()
         if value == 1:
             self.plug1_switch.configure(text="On")
@@ -373,6 +425,8 @@ class Application(ct.CTk):
             self.hardware.deviceToggle("p1", False)
 
     def togglePlug2(self):
+        # Used to toggle the text for the switch in the devices tab
+        # Also toggles the state of the plug
         value = self.plug2_switch.get()
         if value == 1:
             self.plug2_switch.configure(text="On")
@@ -383,35 +437,55 @@ class Application(ct.CTk):
 
 
     def chooseColour(self):
+        # Opens the colour picker window
+        # When a colour is chosen in the colour picker window the value for it is saved into the colour_code attribute
         self.colour_code = colorchooser.askcolor(title="Select Colour")
 
+        # Each value within the code needs to be divided by 225
+        # They can then be saved into red, green and blue variables
         r, g, b = [x/255.0 for x in self.colour_code[0]]
 
+        # Converting the RGB values to hue, saturation, brightness as that is
+        # what the method to change the lighting takes in as an input
         self.colour_hsv = csys.rgb_to_hsv(r, g, b)
+
+        # Putting all values in colour_hsv in the correct range
         self.colour_hsv = [self.colour_hsv[0]*360, self.colour_hsv[1]*100, self.colour_hsv[2]*100]
 
+        # Creating a frame witch shows the colour which the user has chosen in the colour picker window
         self.colour_preview = ct.CTkFrame(master=self.bulb_frame, width=300, height=250, fg_color=self.colour_code[1])
         self.colour_preview.grid(row=4, column=0, columnspan=2, padx=20, pady=5)
 
     def executeLightChange(self):
         try:
+            # Attempting to get the hsv values from the chooseColour() subroutine
             hue, saturation, brightness = int(self.colour_hsv[0]), int(self.colour_hsv[1]), int(self.colour_hsv[2])
         except:
+            # If that doesnt work it means the user has not chosen a colour so an error message is shown
             retry_thread = threading.Thread(target=self.show_light_error_msg)
             retry_thread.start()
 
         try:
+            # This also attempts to get the colour temperature that was inputted
             colour_temperature = int(self.colourTemperature_entry.get())
+
+            # If there is a colour temperature it checks if it is in the correct range
             if colour_temperature <= 6000 and colour_temperature >= 2500:
+                # If so the colour change is executed
                 self.hardware.changeLightSettings(hue, brightness, saturation, colour_temperature)
             else:
+                # Otherwise the error messasge is shown using
+                # threading to show it while the user is using the application
                 retry_thread = threading.Thread(target=self.show_light_error_msg)
                 retry_thread.start()
         except:
+            # This is if no value is in the colour temperature entry box
+            # It will instead perform the colour change without giving in a colour temperature value
             self.hardware.changeLightSettings(hue, brightness, saturation, "invalid")
 
     def show_light_error_msg(self):
-        print("Running error msg")
+        # Creates a label at the bottom of the devices tab which
+        # will show that there is an error with the users entries
         self.error_message = ct.CTkLabel(master=self.bulb_frame,
                                          text="Invalid entry / Not all fields have been filled")
         self.error_message.grid(row=6, column=0, pady=5, sticky="we", columnspan=2)
@@ -422,9 +496,6 @@ class Application(ct.CTk):
         # ==== Here we are creating the frames which the app will be in ==== #
         for child in self.winfo_children():
             child.destroy()
-
-        self.settings_tab.destroy()
-        self.devices_tab.destroy()
 
         self.grid_columnconfigure(1, weight=0)
         self.grid_rowconfigure(0, weight=0)
@@ -517,7 +588,6 @@ class Application(ct.CTk):
                                       font=self.title_font,
                                       text_color="white")
         self.register_title.grid(column=0, row=2, padx=5, pady=30)
-        self.register_title.configure()
 
         self.first_name_entry = ct.CTkEntry(
             master=self.main_frame,
@@ -601,59 +671,117 @@ class Application(ct.CTk):
         )
 
     def colourThemeCallback(self, choice):
+        # Simple function to change the value of the colour_theme_var to the current choice of the combobox
         self.colour_theme_var.set(choice)
 
     def create_account(self):
+        # Getting all the values within the entry boxes
         firstname = self.first_name_entry.get()
         lastname = self.last_name_entry.get()
         email = self.email_entry.get()
         password = self.password_entry.get()
 
+        # Checking if any of the variables are empty and showing an error message if so
         if firstname == "" or lastname == "" or email == "" or password == "":
+            self.retry_msg = "All fields must be filled"
             retry_thread = threading.Thread(target=self.show_register_error_msg)
             retry_thread.start()
+
+        # Checking if the email is a valid email
+        elif "@" not in email or ".com" not in email:
+            self.retry_msg = "Invalid Email"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
+        # Checking if the account already exists
+        elif self.db.check_email(email) == False:
+            self.retry_msg = "Account already exists"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
+        # Performing checks on the password validity
+        elif (len(password) < 6 or len(password) > 20):
+            self.retry_msg = "Your password must be between 6 and 20 letters"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
+        elif not re.search("[a-z]", password):
+            self.retry_msg = "Your password must have at least one lower case letter"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
+        elif not re.search("[0-9]", password):
+            self.retry_msg = "Your password must have at least one number"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
+        elif not re.search("[A-Z]", password):
+            self.retry_msg = "Your password must have at least 1 uppercase letter"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
+        elif not re.search("[$#@]", password):
+            self.retry_msg = "Your password must have at least 1 special character"
+            retry_thread = threading.Thread(target=self.show_register_error_msg)
+            retry_thread.start()
+
         else:
             self.db.register(email, password, firstname, lastname)
             self.create_main_screen()
 
     def show_register_error_msg(self):
         self.error_message = ct.CTkLabel(master=self.main_frame,
-                                         text="All fields must be filled")
+                                         text=self.retry_msg)
         self.error_message.grid(row=9, column=0)
-        time.sleep(3)
+        time.sleep(1.5)
         self.error_message.destroy()
-
 
     def logout(self):
         self.db.logout()
-
         self.create_login_screen()
 
     def login(self):
+        # Getting the value of the email and password
         email = self.email_entry.get()
         password = self.password_entry.get()
 
+        # Attempting to log into the application through the database function
         return_code = self.db.login(email, password)
 
+        # If successful, the application's main screen is generated
         if return_code[0] == True:
             self.create_main_screen()
         else:
-            retry_thread = threading.Thread(target=self.show_login_error_msg)
-            retry_thread.start()
+            if return_code[1] == "002":
+                # Otherwise, if the error message is "002" it will show that
+                # the password didnt match the one in the database
+                self.msg = "Incorrect password"
+                retry_thread = threading.Thread(target=self.show_login_error_msg)
+                retry_thread.start()
+            else:
+                # If it isn't the password, it means that the account doesn't exist
+                # Error message is shown to show that error message
+                self.msg = "Account doesn't exist"
+                retry_thread = threading.Thread(target=self.show_login_error_msg)
+                retry_thread.start()
 
     def show_login_error_msg(self):
+        # Creating text on the screen to show the label
         self.error_message = ct.CTkLabel(master=self.main_frame,
-                                         text="Invalid Email or Password Doesnt Match")
+                                         text=self.msg)
         self.error_message.grid(row=9, column=0)
         time.sleep(3)
         self.error_message.destroy()
 
-    # This will define what happens when the exit button is pressed
+    # This defines what happens when the exit button is pressed
     def close(self, event=0):
         self.destroy()
 
     def sel_format_event(self):
+        # Checking the value of the format switch
         current = self.format_switch.get()
+
+        # Changing the text of the switch to match the current value of the switch
         if current == "12":
             self.format_switch.configure(text="12-Hour Format")
         elif current == "24":
@@ -661,22 +789,24 @@ class Application(ct.CTk):
 
     # This will define what happens when the save button is pressed in the exit menu
     def save_format(self):
+        # Getting all of the values of the entry boxes
         time_format = self.format_switch.get()
         self.db.set_time_format(time_format)
 
         name = self.name_entry.get()
+
+        # Checking the entry boxes to see if they are empty
+        # If they aren't, it is a valid entry and the value can be saved
         if name != "":
             self.db.set_name(name)
 
         plug1IP = self.plug1IP_entry.get()
-
         if plug1IP != "":
             self.db.set_plug1IP(plug1IP)
         else:
             pass
 
         plug2IP = self.plug2IP_entry.get()
-
         if plug2IP != "":
             self.db.set_plug2IP(plug2IP)
         else:
@@ -684,7 +814,6 @@ class Application(ct.CTk):
 
         # This checks what colour theme is currently selected
         # and saves the corresponding ID into the settings table
-
         colourTheme = self.colour_theme_var.get()
         if colourTheme == "dark blue":
             self.db.set_theme("001")
@@ -693,7 +822,9 @@ class Application(ct.CTk):
         if colourTheme == "green":
             self.db.set_theme("003")
 
-        print(self.db.get_all_settings())
+        # Debugging statement to check what is saved into the database now
+        # Note: no longer needed as DB Browser can be used something
+        # print(self.db.get_all_settings())
 
 if __name__ == "__main__":
     application = Application()

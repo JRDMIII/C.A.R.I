@@ -1,9 +1,13 @@
+import threading
+import time
+
 from PyP100 import PyP110, PyL530
 
 class Hardware():
     def __init__(self, plugIP1, plugIP2, bulbIP, email, password):
         super().__init__()
 
+        # Checking if the IP addresses are valid/if they are there
         try:
             self.plug1 = PyP110.P110(plugIP1, email, password)
             self.plug1.handshake()
@@ -17,9 +21,11 @@ class Hardware():
             self.bulb.handshake()
             self.bulb.login()
         except:
+            # If not an error message is printed to the console
             print("Some of your devices may not work as you have not entered an ip address into the application")
 
     def getDeviceStatus(self, device_name):
+        # Returning the current state of the device inputted into the method
         if device_name == "p1":
             result = self.plug1.getDeviceInfo()["result"]
             status = result["device_on"]
@@ -34,16 +40,20 @@ class Hardware():
             return status
 
     def allDevicesOn(self):
+        # Turns on all devices simultaneously
         self.plug1.turnOn()
         self.plug2.turnOn()
         self.bulb.turnOn()
 
     def allDevicesOff(self):
+        # Turns off all devices simultaneously
         self.plug1.turnOff()
         self.plug2.turnOff()
         self.bulb.turnOff()
 
     def deviceToggle(self, deviceName, turnOn):
+        # This subroutine allows for the devices to be individually turned on or off or toggled
+        # Depending on the function which the user is attempting to access
         if deviceName == "p1":
             if turnOn == True:
                 self.plug1.turnOn()
@@ -76,7 +86,9 @@ class Hardware():
                 print("Bulb has been toggled")
 
     def increaseHue(self):
+        # Increasing the hue of the lightbulb
         try:
+            # Getting the current value of the lightbulb hue
             result = self.bulb.getDeviceInfo()["result"]
             hue = int(result["hue"]) + 10
             saturation = int(result["saturation"])
@@ -128,6 +140,44 @@ class Hardware():
             print("The colours have been changed")
         except:
             return "Could not perform action"
+
+    def start_rgb(self):
+        rgb = threading.Thread(target=self.rainbowLights)
+        rgb.start()
+
+    def rainbowLights(self):
+        direction = "Up"
+        while True:
+            if direction == "Up":
+                try:
+                    print(direction)
+                    result = self.bulb.getDeviceInfo()["result"]
+                    hue = int(result["hue"]) + 2
+                    saturation = int(result["saturation"])
+                    self.bulb.setColor(hue, saturation)
+                except:
+                    direction = "Down"
+                    print(direction)
+                    result = self.bulb.getDeviceInfo()["result"]
+                    hue = int(result["hue"]) - 2
+                    saturation = int(result["saturation"])
+                    self.bulb.setColor(hue, saturation)
+            elif direction == "Down":
+                try:
+                    print(direction)
+                    result = self.bulb.getDeviceInfo()["result"]
+                    hue = int(result["hue"]) - 2
+                    saturation = int(result["saturation"])
+                    self.bulb.setColor(hue, saturation)
+                except:
+                    direction = "Up"
+                    print(direction)
+                    result = self.bulb.getDeviceInfo()["result"]
+                    hue = int(result["hue"]) + 2
+                    saturation = int(result["saturation"])
+                    self.bulb.setColor(hue, saturation)
+            time.sleep(0.2)
+
 
     def showEnergyUsage(self):
         plug1Energy = self.plug1.getEnergyUsage()["result"]

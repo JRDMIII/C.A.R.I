@@ -173,6 +173,17 @@ class database():
     """)
         self.conn.commit()
 
+    def check_email(self, email):
+        self.c.execute(f"""
+            SELECT email
+            FROM tblAccounts
+            WHERE email="{email}"
+        """)
+        if self.c.fetchall()[0] == "":
+            return True
+        else:
+            return False
+
     # === This will show the entire database - for debugging purposes === #
     def get_all_settings(self):
         self.c.execute("""

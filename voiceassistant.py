@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import time
 
+import pyjokes
+
 import csv
 
 # This module is what plays the voice assistants voice back to the user
@@ -13,7 +15,7 @@ import datetime
 import speech_recognition as sr
 
 # This will be the module that will be used to search for
-# import googlesearch
+import googlesearch
 
 import webbrowser
 
@@ -22,6 +24,10 @@ import requests
 import application_database as db
 import gestureRecognition as gr
 import hardware as hd
+
+def return_jokes():
+    joke = pyjokes.get_joke(language="en", category="neutral")
+    assistantVoice(joke)
 
 def return_tasks():
     token = 'secret_L8AKRecNOCHoc0cC1hRehIek3F58MSMaO8z4JcRHi2v'
@@ -270,14 +276,16 @@ def process_query():
     # This makes sure that queries will be constantly processed
     while True:
         # query = getAudio().lower()
-        query = "hey assistant hand gesture"
+        query = "hey assistant tell me a joke"
         if query == "None":
             break
         elif "assistant" in query:
             query = query.split(" and ")
             print(query)
             for request in query:
-                if "what is the date" in request:
+                if " joke" in request:
+                    return_jokes()
+                elif "what is the date" in request:
                     day = return_day()
                     date = return_date()
                     assistantVoice("Today is " + day + " " + date)
