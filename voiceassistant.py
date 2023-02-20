@@ -13,9 +13,7 @@ import datetime
 
 # This module is required for the microphone and speech recognition
 import speech_recognition as sr
-
-# This will be the module that will be used to search for
-import googlesearch
+import pyaudio
 
 import webbrowser
 
@@ -157,26 +155,6 @@ def return_time():
     if format == "24":
         return str(hour), mins, ""
 
-def return_search(query):
-    # This is altering the string from the query in order to only get the search result back
-    start = query.find("search ")
-    query = query[start + 7:]
-
-    # This gives an update message to the user while the search is being performed
-    assistantVoice("Looking for " + query)
-
-    # This creates a list of results which come from searching up the query on the user's preferred browser
-    results = googlesearch.search(query, num=1)
-    searches = []
-
-    # This takes the first search from the list of results and opens the linkn on the web browser
-    for i in results:
-        searches.append(i)
-        break
-
-    search = searches[0]
-    webbrowser.open(search)
-
 def return_morn_prep():
     name = str(database.get_name())
     assistantVoice("Good Morning " + str(name) + ", hope you are feeling well!")
@@ -259,7 +237,7 @@ def assistantVoice(output):
 def getAudio():
     # This instantiates an object for recognising voices
     rec = sr.Recognizer()
-    m = sr.Microphone()
+    m = sr.Microphone(device_index=0)
 
     with m as source:
         # This begins recording audio coming from our mic source
@@ -275,8 +253,7 @@ def getAudio():
 def process_query():
     # This makes sure that queries will be constantly processed
     while True:
-        # query = getAudio().lower()
-        query = "hey assistant tell me a joke"
+        query = getAudio().lower()
         if query == "None":
             break
         elif "assistant" in query:
@@ -302,8 +279,6 @@ def process_query():
                     else:
                         hour, mins, format = return_time()
                         assistantVoice("It is " + hour + " " + mins + format)
-                elif "search " in request:
-                    return_search(request)
 
                 # === All of these are statements referring to the hardware === #
                 elif "turn" in request or "switch" in request:
@@ -365,6 +340,7 @@ if __name__ == "__main__":
     database = db.database()
     engine = pyttsx3.init()
     hardware = hd.Hardware(database.get_plug1IP(), database.get_plug2IP(), database.get_bulbIP(), "damiolatunji4tj@gmail.com", "party39ta3")
+    print("All objects created")
 
     while True:
         process_query()
